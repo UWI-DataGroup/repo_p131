@@ -156,6 +156,7 @@ replace time=1 if (time==0 & deceased==0) //238 changes
 
 ** AR: after meeting RH 26-aug-2016: CHANGE THOSE WITH DOT>DOD SO DOT=DOD
 
+**JC (14feb2019) tab deceased ,m //48.03% used as 3-yr survival in table ES1 (executive summary, 2014 annual report)
 
 
 *************************************************************
