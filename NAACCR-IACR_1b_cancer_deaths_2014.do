@@ -1,62 +1,48 @@
-** Stata version control
-version 15.1
+** HEADER -----------------------------------------------------
+**  DO-FILE METADATA
+    //  algorithm name			    1b_deaths_2014.do
+    //  project:				        BNR
+    //  analysts:				       	Jacqueline CAMPBELL
+    //  date first created      12-FEB-2019
+    // 	date last modified	    12-FEB-2019
+    //  algorithm task			    Creating 'previously-matched' dataset
+    //  status                  Completed
+    //  objectve                To check and update any variables needed for survival analysis
 
-** Initialising the STATA log and allow automatic page scrolling
-capture {
-        program drop _all
-	drop _all
-	log close
-	}
 
-** Direct Stata to your do file folder using the -cd- command
-cd "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\"
+    ** General algorithm set-up
+    version 15
+    clear all
+    macro drop _all
+    set more off
+    set linesize 80
 
-** Begin a Stata logfile
-log using "logfiles\naaccr-iacr_2014_2019.smcl", replace
+    ** Initialising the STATA log and allow automatic page scrolling
+    capture {
+            program drop _all
+    	drop _all
+    	log close
+    	}
 
-** Automatic page scrolling of output
-set more off
+    ** Set working directories: this is for DATASET and LOGFILE import and export
+    ** DATASETS to encrypted SharePoint folder
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
- ******************************************************************************
- *
- *	GA-C D R C      A N A L Y S I S         C O D E
- *                                                              
- *  DO FILE: 		1b_cancer_deaths_2014
- *					Dofile 1b: Death Data Matching
- *
- *	STATUS:			Completed
- *
- *  FIRST RUN: 		12feb2019
- *
- *	LAST RUN:		12feb2019
- *
- *  ANALYSIS: 		Matching 2008 cancer dataset with 2013-2017 death dataset
- *					JC uses for basis of survival code for abstract submission
- *					to NAACCR-IACR joint conference: deadline 15feb2019
- *
- *	OBJECTIVE:		To have one dataset with matched 'alive' cancer cases 
- *					with death info if they died. Steps for achieving objective:
- *					(1) Check for duplicates by name in merged cancer and deaths
- *					(2) If true duplicate but case didn't merge, check for 
- *						differences in lname, fname, sex, dod fields
- *					(3) Correct differences identified above so records will merge
- *					(4) After corrections complete, merge datasets again
- *
- * 	VERSION: 		version01
- *
- *  CODERS:			J Campbell/Stephanie Whiteman
- *     
- *  SUPPORT: 		Natasha Sobers/Ian R Hambleton
- *
- ******************************************************************************
+    ** Close any open log file and open a new log file
+    capture log close
+    log using "`logpath'\2014_cancer_deaths.smcl", replace
+** HEADER -----------------------------------------------------
 
-	 
+
+
 **************************
 **   2014 CANCER DATA   **
 ** 2013-2017 DEATH DATA **
 **************************
 ** Load the 2014 cancer dataset - note this dataset was already matched to 2013-2017 death data so just running some checks
-use "data\raw\2014_cancer_sites_da.dta", clear
+use "`datapath'\version01\1-input\2014_cancer_sites_da.dta", clear
 
 count //927
 
@@ -77,8 +63,12 @@ count if slc==2 & dod==. //0
 count if patient==. //0
 count if deceased==1 & dod==. //0
 
+count if dlc==. //3
+list pid fname lname deceased dod if dlc==.
+replace dlc=dod if dlc==. //3 changes
+
 count //927
 
 ** Save final 2014 cancer dataset to be used in cancer survival analysis
-save "data\clean\datarequest_NAACCR-IACR_matched_2014.dta", replace
+save "`datapath'\version01\3-output\datarequest_NAACCR-IACR_matched_2014.dta", replace
 label data "2014 cancer and 2013-2017 deaths matched - NAACCR-IACR 2019 Submission"

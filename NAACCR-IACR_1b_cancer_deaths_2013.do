@@ -1,62 +1,47 @@
-** Stata version control
-version 15.1
+** HEADER -----------------------------------------------------
+**  DO-FILE METADATA
+    //  algorithm name			    1b_deaths_2013.do
+    //  project:				        BNR
+    //  analysts:				       	Jacqueline CAMPBELL, Stephanie WHITEMAN
+    //  date first created      07-FEB-2019
+    // 	date last modified	    12-FEB-2019
+    //  algorithm task			    Matching 2013 cleaned cancer data with 2013-2017 death data, Creating 'matched' merged dataset
+    //  status                  Completed
+    //  objectve               To have one dataset with matched 'alive' cancer cases with death info if they died.
 
-** Initialising the STATA log and allow automatic page scrolling
-capture {
-        program drop _all
-	drop _all
-	log close
-	}
 
-** Direct Stata to your do file folder using the -cd- command
-cd "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\"
+    ** General algorithm set-up
+    version 15
+    clear all
+    macro drop _all
+    set more off
+    set linesize 80
 
-** Begin a Stata logfile
-log using "logfiles\naaccr-iacr_2013_2019.smcl", replace
+    ** Initialising the STATA log and allow automatic page scrolling
+    capture {
+            program drop _all
+    	drop _all
+    	log close
+    	}
 
-** Automatic page scrolling of output
-set more off
+    ** Set working directories: this is for DATASET and LOGFILE import and export
+    ** DATASETS to encrypted SharePoint folder
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
- ******************************************************************************
- *
- *	GA-C D R C      A N A L Y S I S         C O D E
- *                                                              
- *  DO FILE: 		1b_cancer_deaths_2013
- *					Dofile 1b: Death Data Matching
- *
- *	STATUS:			Completed
- *
- *  FIRST RUN: 		07feb2019
- *
- *	LAST RUN:		12feb2019
- *
- *  ANALYSIS: 		Matching 2013 cancer dataset with 2013-2017 death dataset
- *					JC uses for basis of survival code for abstract submission
- *					to NAACCR-IACR joint conference: deadline 15feb2019
- *
- *	OBJECTIVE:		To have one dataset with matched 'alive' cancer cases 
- *					with death info if they died. Steps for achieving objective:
- *					(1) Check for duplicates by name in merged cancer and deaths
- *					(2) If true duplicate but case didn't merge, check for 
- *						differences in lname, fname, sex, dod fields
- *					(3) Correct differences identified above so records will merge
- *					(4) After corrections complete, merge datasets again
- *
- * 	VERSION: 		version01
- *
- *  CODERS:			J Campbell/Stephanie Whiteman
- *     
- *  SUPPORT: 		Natasha Sobers/Ian R Hambleton
- *
- ******************************************************************************
+    ** Close any open log file and open a new log file
+    capture log close
+    log using "`logpath'\2013_cancer_deaths.smcl", replace
+** HEADER -----------------------------------------------------
 
-	 
+
 **************************
 **   2013 CANCER DATA   **
 ** 2013-2017 DEATH DATA **
 **************************
 ** Load the 2013 cancer dataset
-use "data\raw\2013_updated_cancer_dataset_site.dta", clear
+use "`datapath'\version01\1-input\2013_updated_cancer_dataset_site.dta", clear
 
 count // 846
 
@@ -66,9 +51,9 @@ drop if vstatus==2 // 390 deleted
 
 count // 456
 
-save "data\raw\datarequest_NAACCR-IACR_alive_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_alive_2013.dta", replace
 
-append using "data\raw\2014_cancer_deaths_dc.dta", force
+append using "`datapath'\version01\1-input\2014_cancer_deaths_dc.dta", force
 
 count // 12742
 
@@ -76,7 +61,7 @@ count // 12742
 gen match=.
 
 
-/* 
+/*
 Note: the unique identifier number for each dataset noted below:
 	cancer dataset - pid is an 8-digit number starting with year followed by 4 sequential numbers starting with 0001 e.g. 20130063.
 	death dataset  - deathid varies in length of digits and is sequential starting from 1.
@@ -86,7 +71,7 @@ Note: the unique identifier number for each dataset noted below:
 Steps for checking below lists:
  (1) Look, first, for eid and then the deathid that has a name match with this eid
  (2) Check if natregno for eid matches the nrn for deathid
-       (a) If natregno and nrn match (as well as dod) then 
+       (a) If natregno and nrn match (as well as dod) then
 	        (i) write on list "∆ match=1" (i.e. change match to equal 1)
 			(ii) update dofile "replace match=1" code with pid and deathid
 	   (b) If naregno and nrn do not match then
@@ -95,16 +80,16 @@ Steps for checking below lists:
 			(iii) Check if field labelled 'NRN' has more up-to-date natregno info
 			(iv)   If still no match then check the names by natregno(eid) and nrn(deathid) in the 'GACDRC_Electoral List.xlsx'
 				   which is stored in the folder pathway BNR_data\data_requests\...\data\raw
-					(If cannot find natregno or nrn in electoral list that may mean these are incorrect so may need 
+					(If cannot find natregno or nrn in electoral list that may mean these are incorrect so may need
 					to search electoral list by filtering LastName and FirstName)
 			(v)     Additional step is you can check the Stata data editor(browse), especially if deathid is missing nrn,
 					by filtering by deathid to see 'cod1a'(cause of death) vs the primary site in CR5db or check address(deathid) vs villagetown(pid)
 			(vi)     Once above done then you can conclude these do not match so write on list "no match"
-  
+
   Note 1: the variable 'dod' on the cancer dataset (i.e. the data with eid) should really be 'dlc'(date last contact)
 		  as these are alive patients so expect dod will not always match.
   Note 2: if you find any updates to e.g. natregno then these can be updated using the 'replace natregno=...' code below.
-  
+
   For below you can ignore and continue checking other names on the list:
   Note 3: some of the duplicates will have only eid and no corresponding deathid for the same name - these are multiple primaries (more than one cancer).
   Note 4: some of the duplicates will have only deathid and no corresponding eid for the same name - these are deaths with same name but are different people.
@@ -132,7 +117,7 @@ count if (regexm(lname, "^h")|regexm(lname, "^i")|regexm(lname, "^j")|regexm(lna
 	 |regexm(lname, "^r")|regexm(lname, "^s")|regexm(lname, "^t") ///
 	 |regexm(lname, "^u")|regexm(lname, "^v")|regexm(lname, "^w") ///
 	 |regexm(lname, "^x")|regexm(lname, "^y")|regexm(lname, "^z")) & dupname>0 //572
-	 
+
 list fname lname nrn natregno dod deathid pid if ///
 	 (regexm(lname, "^a")|regexm(lname, "^b")|regexm(lname, "^c") ///
 	 |regexm(lname, "^d")|regexm(lname, "^e")|regexm(lname, "^f") ///
@@ -149,7 +134,7 @@ list fname lname nrn natregno dod deathid pid if ///
 
 ** If you want to use an alternative format to lists above, the data and filter used above can be exported to excel
 export_excel deathid pid fname lname nrn natregno dod cod1a primarysite histol address if dupname>0 ///
-			 using "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\data\raw\2019-02-12_2013_JC.xlsx", sheet("List1_2013") firstrow(variables) replace
+			 using "`datapath'\version01\2-working\2019-02-12_2013_JC.xlsx", sheet("List1_2013") firstrow(variables) replace
 
 
 ** Update match field for all cases with matching cancer and death data
@@ -255,7 +240,7 @@ count //
 preserve
 drop if pid=="" | match==1
 count //386
-save "data\raw\datarequest_NAACCR-IACR_cancer_unmatched_alive_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2013.dta", replace
 restore
 
 ** Create cancer dataset with match
@@ -265,7 +250,7 @@ count //70
 rename deathid deathid_dd
 rename dod dod_dd
 rename cod1a cod1a_dd
-rename cod cod_dd 
+rename cod cod_dd
 rename nrn nrn_dd
 rename address address_dd
 rename age age_dd
@@ -286,7 +271,7 @@ rename regdate regdate_dd
 rename dupdod dupdod_dd
 rename dupname dupname_dd
 drop dlc slc name6 duration* onset* cod1b cod1c cod1d cod2* certif* death_certif* _merge
-save "data\raw\datarequest_NAACCR-IACR_cancer_matched_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_matched_2013.dta", replace
 restore
 
 ** Create death dataset with match
@@ -294,15 +279,15 @@ preserve
 drop if deathid==. | match==200
 count //68
 drop _merge
-save "data\raw\datarequest_NAACCR-IACR_death_matched_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_matched_2013.dta", replace
 restore
 
 ** Clear data and merge 2008 'alive' cancer dataset with matched death dataset
-use "data\raw\datarequest_NAACCR-IACR_cancer_matched_2013.dta", clear
+use "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_matched_2013.dta", clear
 
-merge m:1 lname fname match using "data\raw\datarequest_NAACCR-IACR_death_matched_2013.dta"
+merge m:1 lname fname match using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_matched_2013.dta"
 
-/* 
+/*
     Result                           # of obs.
     -----------------------------------------
     not matched                             1
@@ -324,11 +309,11 @@ merge m:1 lname fname match using "data\raw\datarequest_NAACCR-IACR_death_matche
 
 drop *_dd*
 ** Save merged dataset
-save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", replace
 
 
 ** Save merged dataset
-save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", replace
 
 
 *************************
@@ -337,18 +322,18 @@ save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", replace
 *************************
 
 ** Create alive cancer dataset wtih merged dataset and unmatched alive cases
-use "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", clear
+use "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2013.dta", clear
 
 count //70
 
-append using "data\raw\datarequest_NAACCR-IACR_cancer_unmatched_alive_2013.dta"
+append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2013.dta"
 
 count //456
 
-save "data\raw\datarequest_NAACCR-IACR_cancer_alive_un&matched_2013.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_alive_un&matched_2013.dta", replace
 
 ** Create 2013 cancer dataset with alive and previously-matched dead cases
-use "data\raw\2013_updated_cancer_dataset_site.dta", clear
+use "`datapath'\version01\1-input\2013_updated_cancer_dataset_site.dta", clear
 
 
 count //846
@@ -356,7 +341,7 @@ drop if vstatus!=2 //456 deleted
 
 count //390
 
-append using "data\raw\datarequest_NAACCR-IACR_cancer_alive_un&matched_2013.dta"
+append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_alive_un&matched_2013.dta"
 
 count //846
 
@@ -380,8 +365,15 @@ count if vstatus==2 & dod==. //0
 count if patient==. //0
 count if deceased==1 & dod==. //0
 
+count if dlc==. //26
+replace dlc=dod if dlc==. //26 changes
+
+tab slc,m
+replace slc=1 if deceased==2 //386 changes
+replace slc=2 if deceased==1 //390 changes
+
 count //846
 
 ** Save final 2013 cancer dataset to be used in cancer survival analysis
-save "data\clean\datarequest_NAACCR-IACR_matched_2013.dta", replace
+save "`datapath'\version01\3-output\datarequest_NAACCR-IACR_matched_2013.dta", replace
 label data "2013 cancer and 2013-2017 deaths matched - NAACCR-IACR 2019 Submission"

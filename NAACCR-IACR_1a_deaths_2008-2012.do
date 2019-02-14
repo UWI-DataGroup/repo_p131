@@ -1,60 +1,44 @@
-** Stata version control
-version 15.1
+** HEADER -----------------------------------------------------
+**  DO-FILE METADATA
+    //  algorithm name			    1a_deaths_2008-2012.do
+    //  project:				        BNR
+    //  analysts:				       	Jacqueline CAMPBELL
+    //  date first created      07-FEB-2019
+    // 	date last modified	    12-FEB-2019
+    //  algorithm task			    Preparing 2008-2012 death data for matching with 2008 cancer data
+    //  status                  Completed
 
-** Initialising the STATA log and allow automatic page scrolling
-capture {
-        program drop _all
-	drop _all
-	log close
-	}
 
-** Direct Stata to your do file folder using the -cd- command
-cd "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\"
+    ** General algorithm set-up
+    version 15
+    clear all
+    macro drop _all
+    set more off
+    set linesize 80
 
-** Begin a Stata logfile
-log using "logfiles\naaccr-iacr_2019_deaths_prep.smcl", replace
+    ** Initialising the STATA log and allow automatic page scrolling
+    capture {
+            program drop _all
+    	drop _all
+    	log close
+    	}
 
-** Automatic page scrolling of output
-set more off
+    ** Set working directories: this is for DATASET and LOGFILE import and export
+    ** DATASETS to encrypted SharePoint folder
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
- ******************************************************************************
- *
- *	GA-C D R C      A N A L Y S I S         C O D E
- *                                                              
- *  DO FILE: 		1a_deaths_2008-2012
- *					Dofile 1a: Death Data Prep (2008-2012)
- *
- *	STATUS:			In progress
- *
- *  FIRST RUN: 		07feb2019
- *
- *	LAST RUN:		07feb2019
- *
- *  ANALYSIS: 		Preparing 2008-2012 death dataset for matching with 2008 cancer
- *					JC uses for basis of survival code for abstract submission
- *					to NAACCR-IACR joint conference: deadline 15feb2019
- *
- *	OBJECTIVE:		To have one dataset with matched 'alive' cancer cases 
- *					with death info if they died. Steps for achieving objective:
- *					(1) Check for duplicates by name in merged cancer and deaths
- *					(2) If true duplicate but case didn't merge, check for 
- *						differences in lname, fname, sex, dod fields
- *					(3) Correct differences identified above so records will merge
- *					(4) After corrections complete, merge datasets again
- *
- * 	VERSION: 		version01
- *
- *  CODERS:			J Campbell/Stephanie Whiteman
- *     
- *  SUPPORT: 		Natasha Sobers/Ian R Hambleton
- *
- ******************************************************************************
+    ** Close any open log file and open a new log file
+    capture log close
+    log using "`logpath'\2008-2012_deaths_prep.smcl", replace
+** HEADER -----------------------------------------------------
 
 **************************************
-** DATA PREPARATION  
+** DATA PREPARATION
 **************************************
 ** LOAD the cleaned and prepped (for REDCap) national registry deaths 2008-2017 dataset
-import excel using "data\raw\BNRDeathDataALL_DATA_2019-02-07_JC.xlsx" , firstrow case(lower) clear
+import excel using "`datapath'\version01\1-input\BNRDeathDataALL_DATA_2019-02-07_JC.xlsx" , firstrow case(lower) clear
 
 count
 ** 11,890 records
@@ -64,7 +48,7 @@ rename record_id deathid
 format dod %dD_m_CY
 label var dod "Date of death"
 
-format nrn %12.0g 
+format nrn %12.0g
 //Note: nrn missing leading zeros as this dataset exported as .csv from REDCap db
 tostring nrn, replace
 
@@ -75,7 +59,7 @@ tostring nrn, replace
 
 ** Need to check for duplicate death registrations
 ** First split full name into first, middle and last names
-** Also - code to split full name into 2 variables fname and lname - else can't merge! 
+** Also - code to split full name into 2 variables fname and lname - else can't merge!
 split pname, parse(", "" ") gen(name)
 order deathid pname name1 name2 name3 name4 name5 name6 name7
 
@@ -262,4 +246,4 @@ order deathid pname fname mname lname namematch
 
 count //11,890
 
-save "data\raw\datarequest_NAACCR-IACR_death_prep_2008-2012.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_prep_2008-2012.dta", replace

@@ -1,62 +1,46 @@
-** Stata version control
-version 15.1
+** HEADER -----------------------------------------------------
+**  DO-FILE METADATA
+    //  algorithm name			    1b_deaths_2008.do
+    //  project:				        BNR
+    //  analysts:				       	Jacqueline CAMPBELL
+    //  date first created      06-FEB-2019
+    // 	date last modified	    12-FEB-2019
+    //  algorithm task			    Matching 2008 cleaned cancer data with 2013-2017 death data, Creating 'matched' merged dataset
+    //  status                  Completed
+    //  objectve               To have one dataset with matched 'alive' cancer cases with death info if they died.
 
-** Initialising the STATA log and allow automatic page scrolling
-capture {
-        program drop _all
-	drop _all
-	log close
-	}
 
-** Direct Stata to your do file folder using the -cd- command
-cd "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\"
+    ** General algorithm set-up
+    version 15
+    clear all
+    macro drop _all
+    set more off
 
-** Begin a Stata logfile
-log using "logfiles\naaccr-iacr_2008_2019.smcl", replace
+    ** Initialising the STATA log and allow automatic page scrolling
+    capture {
+            program drop _all
+    	drop _all
+    	log close
+    	}
 
-** Automatic page scrolling of output
-set more off
+    ** Set working directories: this is for DATASET and LOGFILE import and export
+    ** DATASETS to encrypted SharePoint folder
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
- ******************************************************************************
- *
- *	GA-C D R C      A N A L Y S I S         C O D E
- *                                                              
- *  DO FILE: 		1b_cancer_deaths_2008
- *					Dofile 1b: Death Data Matching
- *
- *	STATUS:			Completed
- *
- *  FIRST RUN: 		06feb2019
- *
- *	LAST RUN:		12feb2019
- *
- *  ANALYSIS: 		Matching 2008 cancer dataset with 2013-2017 death dataset
- *					JC uses for basis of survival code for abstract submission
- *					to NAACCR-IACR joint conference: deadline 15feb2019
- *
- *	OBJECTIVE:		To have one dataset with matched 'alive' cancer cases 
- *					with death info if they died. Steps for achieving objective:
- *					(1) Check for duplicates by name in merged cancer and deaths
- *					(2) If true duplicate but case didn't merge, check for 
- *						differences in lname, fname, sex, dod fields
- *					(3) Correct differences identified above so records will merge
- *					(4) After corrections complete, merge datasets again
- *
- * 	VERSION: 		version01
- *
- *  CODERS:			J Campbell/Stephanie Whiteman
- *     
- *  SUPPORT: 		Natasha Sobers/Ian R Hambleton
- *
- ******************************************************************************
+    ** Close any open log file and open a new log file
+    capture log close
+    log using "`logpath'\2008_cancer_deaths.smcl", replace
+** HEADER -----------------------------------------------------
 
-	 
+
 **************************
 **   2008 CANCER DATA   **
 ** 2013-2017 DEATH DATA **
 **************************
 ** Load the 2008 cancer dataset
-use "data\raw\2008_updated_cancer_dataset_site.dta", clear
+use "`datapath'\version01\1-input\2008_updated_cancer_dataset_site.dta", clear
 rename eid2 pid
 
 count //1,204
@@ -65,12 +49,26 @@ count //1,204
 drop if vstatus==2 //450 deleted
 // 2008 cancer dataset has dod for alive patients but it should really be dlc (date last contact)
 
+count if dod==. //3
+list pid fname lname vstatus deceased doc basis if dod==.
+replace dod=d(30jun2009) if pid==20080664
+replace deceased=1 if pid==20080664
+replace vstatus=2 if pid==20080664
+replace dod=d(16sep2013) if pid==20090061
+replace deceased=1 if pid==20090061
+replace vstatus=2 if pid==20090061
+replace dod=d(30jun2011) if pid==20080179
+replace deceased=1 if pid==20080179
+replace vstatus=2 if pid==20080179
+
 rename dod dlc
+count if pid!=. & dlc==. //0 (new)
+
 count //754
 
-save "data\raw\datarequest_NAACCR-IACR_alive_2008.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_alive_2008.dta", replace
 
-append using "data\raw\2014_cancer_deaths_dc.dta", force
+append using "`datapath'\version01\1-input\2014_cancer_deaths_dc.dta", force
 
 count //13,040
 
@@ -78,7 +76,7 @@ count //13,040
 gen match=.
 
 
-/* 
+/*
 Note: the unique identifier number for each dataset noted below:
 	cancer dataset - pid is an 8-digit number starting with year followed by 4 sequential numbers starting with 0001 e.g. 20130063.
 					 eid is a 12-digit number - first 8 digits match pid then last 4 digits indicate tumour sequence (patient can have multiple tumours).
@@ -89,7 +87,7 @@ Note: the unique identifier number for each dataset noted below:
 Steps for checking below lists:
  (1) Look, first, for eid and then the deathid that has a name match with this eid
  (2) Check if natregno for eid matches the nrn for deathid
-       (a) If natregno and nrn match (as well as dod) then 
+       (a) If natregno and nrn match (as well as dod) then
 	        (i) write on list "∆ match=1" (i.e. change match to equal 1)
 			(ii) update dofile "replace match=1" code with pid and deathid
 	   (b) If naregno and nrn do not match then
@@ -98,16 +96,16 @@ Steps for checking below lists:
 			(iii) Check if field labelled 'NRN' has more up-to-date natregno info
 			(iv)   If still no match then check the names by natregno(eid) and nrn(deathid) in the 'GACDRC_Electoral List.xlsx'
 				   which is stored in the folder pathway BNR_data\data_requests\...\data\raw
-					(If cannot find natregno or nrn in electoral list that may mean these are incorrect so may need 
+					(If cannot find natregno or nrn in electoral list that may mean these are incorrect so may need
 					to search electoral list by filtering LastName and FirstName)
 			(v)     Additional step is you can check the Stata data editor(browse), especially if deathid is missing nrn,
 					by filtering by deathid to see 'cod1a'(cause of death) vs the primary site in CR5db or check address(deathid) vs villagetown(pid)
 			(vi)     Once above done then you can conclude these do not match so write on list "no match"
-  
+
   Note 1: the variable 'dod' on the cancer dataset (i.e. the data with eid) should really be 'dlc'(date last contact)
 		  as these are alive patients so expect dod will not always match.
   Note 2: if you find any updates to e.g. natregno then these can be updated using the 'replace natregno=...' code below.
-  
+
   For below you can ignore and continue checking other names on the list:
   Note 3: some of the duplicates will have only eid and no corresponding deathid for the same name - these are multiple primaries (more than one cancer).
   Note 4: some of the duplicates will have only deathid and no corresponding eid for the same name - these are deaths with same name but are different people.
@@ -135,7 +133,7 @@ count if (regexm(lname, "^h")|regexm(lname, "^i")|regexm(lname, "^j")|regexm(lna
 	 |regexm(lname, "^r")|regexm(lname, "^s")|regexm(lname, "^t") ///
 	 |regexm(lname, "^u")|regexm(lname, "^v")|regexm(lname, "^w") ///
 	 |regexm(lname, "^x")|regexm(lname, "^y")|regexm(lname, "^z")) & dupname>0 //654
-	 
+
 list fname lname nrn natregno dod deathid eid if ///
 	 (regexm(lname, "^a")|regexm(lname, "^b")|regexm(lname, "^c") ///
 	 |regexm(lname, "^d")|regexm(lname, "^e")|regexm(lname, "^f") ///
@@ -152,7 +150,7 @@ list fname lname nrn natregno dod deathid eid if ///
 /*
 ** If you want to use an alternative format to lists above, the data and filter used above can be exported to excel
 export_excel deathid eid fname lname nrn natregno dod if dupname>0 ///
-			 using "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\data\raw\2019-02-07_2008_JC.xlsx", sheet("List1_2008") firstrow(variables)
+			 using "`datapath'\version01\2-working\2019-02-07_2008_JC.xlsx", sheet("List1_2008") firstrow(variables)
 */
 
 ** Update match field for all cases with matching cancer and death data
@@ -224,45 +222,47 @@ replace match=65 if pid==20080059|deathid==21487
 replace match=66 if pid==20080243|deathid==11065
 replace match=67 if pid==20080150|deathid==11405
 replace match=68 if pid==20080642|deathid==7979
-replace match=69 if pid==20080505|deathid==3761 
-replace match=70 if pid==20080472|deathid==13535 
-replace match=71 if pid==20080435|deathid==15856 
-replace match=72 if pid==20080137|deathid==23893 
-replace match=73 if pid==20080543|deathid==10676 
-replace match=74 if pid==20080221|deathid==12670 
-replace match=75 if pid==20080410|deathid==9275 
-replace match=76 if pid==20080565|deathid==21177 
-replace match=77 if pid==20080883|deathid==2388 
-replace match=78 if pid==20080065|deathid==1665 
-replace match=79 if pid==20080348|deathid==8798 
-**replace match=80 if pid==20080279 
-replace match=81 if pid==20080330|deathid==3421 
-replace match=82 if pid==20080234|deathid==17723 
-replace match=83 if pid==20080578|deathid==9374 
-replace match=84 if pid==20080636|deathid==4454 
-replace match=85 if pid==20080208|deathid==5256 
-replace match=86 if pid==20080341|deathid==19048 
-replace match=87 if pid==20080327|deathid==14174 
-replace match=88 if pid==20080412|deathid==13162 
-replace match=89 if pid==20080562|deathid==21086 
-replace match=90 if pid==20080213|deathid==4317 
-replace match=91 if pid==20080601|deathid==2167 
-replace match=92 if pid==20080155|deathid==2424 
-replace match=93 if pid==20080574|deathid==12086 
-replace match=94 if pid==20080622|deathid==5187 
-replace match=95 if pid==20080257|deathid==11162 
-replace match=96 if pid==20080063|deathid==4644 
-replace match=97 if pid==20080544|deathid==10577 
-replace match=98 if pid==20080775|deathid==16789 
-replace match=99 if pid==20080174|deathid==17010 
-replace match=100 if pid==20080360|deathid==18710 
-replace match=101 if pid==20080169|deathid==13263 
-replace match=102 if pid==20080250|deathid==8339 
-replace match=103 if pid==20080661|deathid==12001 
-replace match=104 if pid==20080212|deathid==3321 
-replace match=105 if pid==20080576|deathid==18444 
-replace match=106 if pid==20080553|deathid==9000 
+replace match=69 if pid==20080505|deathid==3761
+replace match=70 if pid==20080472|deathid==13535
+replace match=71 if pid==20080435|deathid==15856
+replace match=72 if pid==20080137|deathid==23893
+replace match=73 if pid==20080543|deathid==10676
+replace match=74 if pid==20080221|deathid==12670
+replace match=75 if pid==20080410|deathid==9275
+replace match=76 if pid==20080565|deathid==21177
+replace match=77 if pid==20080883|deathid==2388
+replace match=78 if pid==20080065|deathid==1665
+replace match=79 if pid==20080348|deathid==8798
+replace match=80 if pid==20080484|deathid==3243 //(new)
+**replace match=80 if pid==20080279
+replace match=81 if pid==20080330|deathid==3421
+replace match=82 if pid==20080234|deathid==17723
+replace match=83 if pid==20080578|deathid==9374
+replace match=84 if pid==20080636|deathid==4454
+replace match=85 if pid==20080208|deathid==5256
+replace match=86 if pid==20080341|deathid==19048
+replace match=87 if pid==20080327|deathid==14174
+replace match=88 if pid==20080412|deathid==13162
+replace match=89 if pid==20080562|deathid==21086
+replace match=90 if pid==20080213|deathid==4317
+replace match=91 if pid==20080601|deathid==2167
+replace match=92 if pid==20080155|deathid==2424
+replace match=93 if pid==20080574|deathid==12086
+replace match=94 if pid==20080622|deathid==5187
+replace match=95 if pid==20080257|deathid==11162
+replace match=96 if pid==20080063|deathid==4644
+replace match=97 if pid==20080544|deathid==10577
+replace match=98 if pid==20080775|deathid==16789
+replace match=99 if pid==20080174|deathid==17010
+replace match=100 if pid==20080360|deathid==18710
+replace match=101 if pid==20080169|deathid==13263
+replace match=102 if pid==20080250|deathid==8339
+replace match=103 if pid==20080661|deathid==12001
+replace match=104 if pid==20080212|deathid==3321
+replace match=105 if pid==20080576|deathid==18444
+replace match=106 if pid==20080553|deathid==9000
 replace match=107 if pid==20080292|deathid==15476
+replace match=108 if pid==20080156|deathid==20707 //(new)
 //216; 215 changes
 
 ** Change all unmatched records to match=200
@@ -271,7 +271,9 @@ replace match=200 if match==. //12,824 changes
 ** Update vstatus and dod
 replace vstatus=2 if match!=200 //215 changes
 replace deceased=1 if match!=200 //196 changes
-replace dlc=dod if match>0 & match<108 //215 changes
+count if pid!=. & dlc==. //0
+replace dlc=dod if match>0 & match<109 & dod!=. //106 changes (new)
+count if pid!=. & dlc==. //0
 
 ** Update any data as necessary - below found in electoral list or CR5db
 replace natregno="210620-0062" if pid==20080497
@@ -307,17 +309,18 @@ count //13,040
 preserve
 drop if eid==. | match!=200
 count //644; 645
-save "data\raw\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008.dta", replace
 restore
 
 ** Create cancer dataset with match
 preserve
 drop if eid==. | match==200
+replace dod=dlc //109 changes (new)
 count //754; 110; 109
 rename deathid deathid_dd
 rename dod dod_dd
 rename cod1a cod1a_dd
-rename cod cod_dd 
+rename cod cod_dd
 rename nrn nrn_dd
 rename address address_dd
 rename age age_dd
@@ -338,22 +341,22 @@ rename regdate regdate_dd
 rename dupdod dupdod_dd
 rename dupname dupname_dd
 drop dlc slc name6 duration* onset* cod1b cod1c cod1d cod2* certif* death_certif*
-save "data\raw\datarequest_NAACCR-IACR_cancer_matched_2008.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_matched_2008.dta", replace
 restore
 
 ** Create death dataset with match
 preserve
 drop if deathid==. | match==200
 count //860; 106
-save "data\raw\datarequest_NAACCR-IACR_death_matched_2008.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_matched_2008.dta", replace
 restore
 
 ** Clear data and merge 2008 'alive' cancer dataset with matched death dataset
-use "data\raw\datarequest_NAACCR-IACR_cancer_matched_2008.dta", clear
+use "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_matched_2008.dta", clear
 
-merge m:1 lname fname match using "data\raw\datarequest_NAACCR-IACR_death_matched_2008.dta"
+merge m:1 lname fname match using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_matched_2008.dta"
 
-/* 
+/*
     Result                           # of obs.
     -----------------------------------------
     not matched                             1
@@ -374,11 +377,16 @@ merge m:1 lname fname match using "data\raw\datarequest_NAACCR-IACR_death_matche
 ** Check which one didn't merge
 **list pid deathid fname lname match if _merge==1 //pid 20080279 which is deceased but in 2010 so un-do replace above so this case will become 'unmatched'
 
+replace dlc=dod_dd if dlc==. //592 changes
 drop *_dd*
-** Save merged dataset
-save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", replace
 
-	 
+count if dlc==. //0 (new)
+count if dod==. //0 (new)
+
+** Save merged dataset
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", replace
+
+
 **************************
 **   2008 CANCER DATA   **
 ** 2008-2012 DEATH DATA **
@@ -388,19 +396,25 @@ While matching 2013-2017 deaths with 2008 data I found cases where patient died 
 so now I need to check those against 2008-2012 deaths before creating final dataset for survival analysis
 */
 ** Load the 2008 'unmatched' cancer dataset
-use "data\raw\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008.dta", clear
+use "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008.dta", clear
 drop name6
+
+count if dlc==. //0 (new)
+count if dod==. //645 (new)
 
 count //645
 
-append using "data\raw\datarequest_NAACCR-IACR_death_prep_2008-2012.dta", force
+append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_prep_2008-2012.dta", force
+
+count if dlc==. //11,890 (new)
+count if dod==. //645 (new)
 
 count //12,535
 
 ** Create field to label records you match
 replace match=. //645 changes
 
-/* 
+/*
 Note: the unique identifier number for each dataset noted below:
 	cancer dataset - eid
 	death dataset  - deathid
@@ -410,7 +424,7 @@ Note: the unique identifier number for each dataset noted below:
 Steps for checking below lists:
  (1) Look, first, for eid and then the deathid that has a name match with this eid
  (2) Check if natregno for eid matches the nrn for deathid
-       (a) If natregno and nrn match (as well as dod) then 
+       (a) If natregno and nrn match (as well as dod) then
 	        (i) write on list "∆ match=1" (i.e. change match to equal 1)
 			(ii) update dofile "replace match=1" code with pid and deathid
 	   (b) If naregno and nrn do not match then
@@ -419,16 +433,16 @@ Steps for checking below lists:
 			(iii) Check if field labelled 'NRN' has more up-to-date natregno info
 			(iv)   If still no match then check the names by natregno(eid) and nrn(deathid) in the 'GACDRC_Electoral List.xlsx'
 				   which is stored in the folder pathway BNR_data\data_requests\...\data\raw
-					(If cannot find natregno or nrn in electoral list that may mean these are incorrect so may need 
+					(If cannot find natregno or nrn in electoral list that may mean these are incorrect so may need
 					to search electoral list by filtering LastName and FirstName)
 			(v)     Additional step is you can check the Stata data editor(browse), especially if deathid is missing nrn,
 					by filtering by deathid to see 'cod1a'(cause of death) vs the primary site in CR5db or check address(deathid) vs villagetown(pid)
 			(vi)     Once above done then you can conclude these do not match so write on list "no match"
-  
+
   Note 1: the variable 'dod' on the cancer dataset (i.e. the data with eid) should really be 'dlc'(date last contact)
 		  as these are alive patients so expect dod will not always match.
   Note 2: if you find any updates to e.g. natregno then these can be updated using the 'replace natregno=...' code below.
-  
+
   For below you can ignore and continue checking other names on the list:
   Note 3: some of the duplicates will have only eid and no corresponding deathid for the same name - these are multiple primaries (more than one cancer).
   Note 4: some of the duplicates will have only deathid and no corresponding eid for the same name - these are deaths with same name but are different people.
@@ -456,7 +470,7 @@ count if (regexm(lname, "^h")|regexm(lname, "^i")|regexm(lname, "^j")|regexm(lna
 	 |regexm(lname, "^r")|regexm(lname, "^s")|regexm(lname, "^t") ///
 	 |regexm(lname, "^u")|regexm(lname, "^v")|regexm(lname, "^w") ///
 	 |regexm(lname, "^x")|regexm(lname, "^y")|regexm(lname, "^z")) & dupname>0 //597
-	 
+
 list fname lname nrn natregno dod deathid eid if ///
 	 (regexm(lname, "^a")|regexm(lname, "^b")|regexm(lname, "^c") ///
 	 |regexm(lname, "^d")|regexm(lname, "^e")|regexm(lname, "^f") ///
@@ -473,7 +487,7 @@ list fname lname nrn natregno dod deathid eid if ///
 /*
 ** If you want to use an alternative format to lists above, the data and filter used above can be exported to excel
 export_excel deathid eid fname lname nrn natregno dod if dupname>0 ///
-			 using "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\data\raw\2019-02-07_2008-2012_JC.xlsx", sheet("List3&4_2008") firstrow(variables) replace
+			 using "`datapath'\version01\2-working\2019-02-07_2008-2012_JC.xlsx", sheet("List3&4_2008") firstrow(variables) replace
 */
 
 ** Update match field for all cases with matching cancer and death data
@@ -528,11 +542,15 @@ replace match=248 if pid==20080469|deathid==7239
 replace match=249 if pid==20080123|deathid==10696
 replace match=250 if pid==20080479|deathid==5489
 replace match=251 if pid==20080203|deathid==9863
+replace match=252 if pid==20080740|deathid==8534 //(new)
 
 ** Update vstatus and dod
 replace vstatus=2 if match!=. //104 changes
 replace deceased=1 if match!=. //64 changes
-replace dlc=dod if match>200 & match<252 //104 changes
+replace dlc=dod if match>200 & match<253 & dod!=. //104 changes; 51 changes (new)
+count if dlc==. //11,839 (new)
+count if pid!=. & dlc==. //0 (new)
+count if dod==. //645 (new)
 
 ** Update any data as necessary - below found in electoral list or CR5db
 replace natregno="190923-0052" if pid==20080421
@@ -553,15 +571,18 @@ replace natregno="210130-0107" if pid==20080476
 replace natregno="120821-8006" if pid==20080385
 replace natregno="220708-9999" if pid==20080205
 replace natregno="360722-7034" if pid==20080720
+replace natregno="300818-7001" if pid==20080740 //(new)
 
 
 ** Create cancer dataset with unmatched
 preserve
 drop if eid==. | match!=.
+replace dod=dlc //592 changes (new)
 rename deathid deathid_dd
+rename dod dod_alive //(new)
 rename dod dod_dd
 rename cod1a cod1a_dd
-rename cod cod_dd 
+rename cod cod_dd
 rename nrn nrn_dd
 rename address address_dd
 rename age age_dd
@@ -583,17 +604,18 @@ rename dupdod dupdod_dd
 rename dupname dupname_dd
 drop dlc slc duration* onset* cod1b cod1c cod1d cod2* certif* death_certif*
 count //592
-save "data\raw\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008-2012.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008-2012.dta", replace
 restore
 
 ** Create cancer dataset with match
 preserve
 drop if eid==. | match==.
+replace dod=dlc //53 changes (new)
 count //53
 rename deathid deathid_dd
 rename dod dod_dd
 rename cod1a cod1a_dd
-rename cod cod_dd 
+rename cod cod_dd
 rename nrn nrn_dd
 rename address address_dd
 rename age age_dd
@@ -614,22 +636,22 @@ rename regdate regdate_dd
 rename dupdod dupdod_dd
 rename dupname dupname_dd
 drop dlc slc duration* onset* cod1b cod1c cod1d cod2* certif* death_certif*
-save "data\raw\datarequest_NAACCR-IACR_cancer_matched_2008-2012.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_matched_2008-2012.dta", replace
 restore
 
 ** Create death dataset with match
 preserve
 drop if deathid==. | match==.
 count //51
-save "data\raw\datarequest_NAACCR-IACR_death_matched_2008-2012.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_matched_2008-2012.dta", replace
 restore
 
 ** Clear data and merge 2008 'alive' cancer dataset with matched death dataset
-use "data\raw\datarequest_NAACCR-IACR_cancer_matched_2008-2012.dta", clear
+use "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_matched_2008-2012.dta", clear
 
-merge m:1 lname fname match using "data\raw\datarequest_NAACCR-IACR_death_matched_2008-2012.dta"
+merge m:1 lname fname match using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_death_matched_2008-2012.dta"
 
-/* 
+/*
     Result                           # of obs.
     -----------------------------------------
     not matched                             0
@@ -638,16 +660,18 @@ merge m:1 lname fname match using "data\raw\datarequest_NAACCR-IACR_death_matche
 */
 
 count //53
+
+replace dlc=dod_dd if dlc==. //0 (new)
 drop *_dd*
 ** Save merged dataset
-save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2008-2012.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2008-2012.dta", replace
 
 ** Add other matched cases from above to this saved dataset
-append using "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta"
+append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta"
 
 count //162
 
-save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", replace
 
 *************************
 **   2008 CANCER DATA  **
@@ -655,19 +679,22 @@ save "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", replace
 *************************
 
 ** Create alive cancer dataset wtih merged dataset and unmatched alive cases
-use "data\raw\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", clear
+use "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2008.dta", clear
 
 count //162
 
-append using "data\raw\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008-2012.dta"
+append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008-2012.dta"
+
+replace dlc=dod_dd if dlc==. //592; 588 changes (new) - changed from dod_alive to dod_dd
+count if dlc==. //0 (new)
 
 drop *_dd*
 count //754
 
-save "data\raw\datarequest_NAACCR-IACR_cancer_alive_un&matched_2008.dta", replace
+save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_alive_un&matched_2008.dta", replace
 
 ** Create 2008 cancer dataset with alive and previously-matched dead cases
-use "data\raw\2008_updated_cancer_dataset_site.dta", clear
+use "`datapath'\version01\1-input\2008_updated_cancer_dataset_site.dta", clear
 
 ** Some CR5 cases missing eid (DCOs) so check CR5 and assign
 order eid2 lineno fname lname
@@ -681,12 +708,31 @@ replace eid2=20081131 if lineno=="X0000012B/2008"
 replace eid2=20081135 if lineno=="X0001509A/2008"
 replace eid2=20081134 if lineno=="X0000067B/2008"
 
+** Update icd10 variable for 9 DCOs
+replace icd10="C099" if eid2==20081133
+replace icd10="C169" if eid2==20081132
+replace icd10="C169" if eid2==20081130
+replace icd10="C189" if eid2==20081129
+replace icd10="C189" if eid2==20081128
+replace icd10="C509" if eid2==20090037
+replace icd10="C509" if eid2==20081131
+replace icd10="C56" if eid2==20081135
+replace icd10="C61" if eid2==20081134
+
 count //1,204
 drop if vstatus!=2 //754 deleted
 
+count if dod==. //0 (new)
+rename dod dlc
+
 count //450
 
-append using "data\raw\datarequest_NAACCR-IACR_cancer_alive_un&matched_2008.dta"
+append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_alive_un&matched_2008.dta"
+
+count if dlc==. //0 (new)
+count if dod==. //1,042 (new)
+count if vstatus==2 & dod==. //450 (new)
+replace dod=dlc if vstatus==2 & dod==. //450 changes (new)
 
 count //1,204
 
@@ -703,7 +749,7 @@ order pid deathid primarysite cod1a fname lname dod
 count if vstatus==2 & cod==. //110
 list deathid pid fname lname if vstatus==2 & cod==.
 export_excel pid deathid fname lname basis nrn natregno dod primarysite histology cod1a if vstatus==2 & cod==. ///
-			 using "L:\BNR_data\DM\data_requests\2019\cancer\versions\NAACCR-IACR\data\raw\2019-02-07_2008_cod_JC.xlsx", sheet("List_cod_missing_2008") firstrow(variables) replace
+			 using "`datapath'\version01\2-working\2019-02-07_2008_cod_JC.xlsx", sheet("List_cod_missing_2008") firstrow(variables) replace
 replace cod=1 if vstatus==2 & cod==. & basis==0 //9 changes
 replace cod=1 if pid==20080084|pid==20080070|pid==20080600|pid==20080411 ///
 				|pid==20080071|pid==20080074|pid==20080077|pid==20080299 ///
@@ -739,13 +785,48 @@ rename doc dot
 count if basis==0 & dot!=dod //0
 count if vstatus==2 & dod==. //0
 count if patient==. //0
-count if deceased==1 & dod==. //11 - checked and dead in main CR5db
-list pid deathid fname lname vstatus basis if deceased==1 & dod==.
-replace vstatus=2 if deceased==1 & dod==. //11 changes
+count if deceased==1 & dod==. //11 - checked and 20080611 died overseas, 20081066 (haem clinic-died but no death data) in main CR5db, found matched pids 20080156,20080484,20080740 not added (new)
+list pid deathid fname lname vstatus natregno topog match if deceased==1 & dod==.
+replace vstatus=. if pid==20080877|pid==20080881|pid==20080882|pid==20080884|pid==20080885 //5 changes(new)
+replace slc=. if pid==20080877|pid==20080881|pid==20080882|pid==20080884|pid==20080885 //5 changes(new)
+replace deceased=2 if pid==20080877|pid==20080881|pid==20080882|pid==20080884|pid==20080885 //5 changes(new)
 
+replace natregno="970918-0120" if pid==20081066 //(new)
+replace natregno="351228-0011" if pid==20080885 //(new)
+
+replace vstatus=2 if deceased==1 & dod==. //2 changes
+replace slc=2 if deceased==1 & dod==. //2 changes
+
+count if dod==. //588 (new)
+tab deceased if dod==. //588 - 586 alive, 2 dead with missing dod (died overseas) (new)
+count if dlc==.
+
+tab slc,m
+replace slc=2 if deceased==1 //505 changes(new)
+replace slc=. if deceased==2 //0 changes(new)
+
+/*
+tab vstatus,m
+tab slc,m
+tab deceased,m
+replace slc=1 if deceased==2 //581 changes
+replace slc=2 if deceased==1 //514 changes
+tab dlc slc,m
+tab slc if dod==.
+replace dlc=dod if dlc==. //450 changes
+replace dod=. if slc==1 //0 changes
+tab slc if dlc==.
+tab dod slc,m
+*/
+** Check for cases who are deceased but missing dod - 12 cases in bnr_survival_2008.do
+list pid fname lname vstatus slc dlc if deceased==2 & dod!=.
+replace deceased=1 if deceased==2 & dod!=. //0
+list fname lname deceased vstatus slc dlc dod if ///
+pid==20080636|pid==20080488|pid==20080668|pid==20080620|pid==20080570|pid==20080435 ///
+|pid==20080472|pid==20080562|pid==20080208|pid==20080508|pid==20080689
 
 count //1,204
 
 ** Save final 2008 cancer dataset to be used in cancer survival analysis
-save "data\clean\datarequest_NAACCR-IACR_matched_2008.dta", replace
+save "`datapath'\version01\3-output\datarequest_NAACCR-IACR_matched_2008.dta", replace
 label data "2008 cancer and 2013-2017 deaths matched - NAACCR-IACR 2019 Submission"
