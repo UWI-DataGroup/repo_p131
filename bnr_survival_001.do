@@ -35,7 +35,7 @@
 **************************************************************************
 
 ** Load the dataset
-use "`datapath'\version01\2-working\2008_updated_cancer_dataset_site_cod2", clear
+use "`datapath'\version01\1-input\2008_updated_cancer_dataset_site_cod2", clear
 
 ** first we have to restrict dataset to patients not tumours
 drop if patient!=1
@@ -287,10 +287,11 @@ preserve
             ;
     #delimit cr
 restore
-
+sts list
+/*
 
 ** MERGE WITH 2010 BARBADOS POPULATION
-merge m:m sex age_10 using "`datapath'\version01\2-working\bb2010_10-2.dta"
+merge m:m sex age_10 using "`datapath'\version01\1-input\bb2010_10-2.dta"
 
 ** MORTALITY RATE RATES
 ** Comparing gender
