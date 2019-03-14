@@ -378,7 +378,7 @@ merge m:1 lname fname match using "`datapath'\version01\2-working\datarequest_NA
 **list pid deathid fname lname match if _merge==1 //pid 20080279 which is deceased but in 2010 so un-do replace above so this case will become 'unmatched'
 
 replace dlc=dod_dd if dlc==. //592 changes
-replace sex=sex_dd if sex==.
+replace sex=sex_dd if sex==. //588 changes
 drop *_dd*
 
 count if dlc==. //0 (new)
@@ -663,7 +663,7 @@ merge m:1 lname fname match using "`datapath'\version01\2-working\datarequest_NA
 count //53
 
 replace dlc=dod_dd if dlc==. //0 (new)
-replace sex=sex_dd if sex==.
+replace sex=sex_dd if sex==. //0
 drop *_dd*
 ** Save merged dataset
 save "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_death_matched_2008-2012.dta", replace
@@ -688,7 +688,7 @@ count //162
 append using "`datapath'\version01\2-working\datarequest_NAACCR-IACR_cancer_unmatched_alive_2008-2012.dta"
 
 replace dlc=dod_dd if dlc==. //592; 588 changes (new) - changed from dod_alive to dod_dd
-replace sex=sex_dd if sex==.
+replace sex=sex_dd if sex==. //588 changes
 count if dlc==. //0 (new)
 
 drop *_dd*
