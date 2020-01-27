@@ -21,7 +21,7 @@
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p117"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
     local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
@@ -37,7 +37,7 @@
 **************************************************************************
 
 ** Load the dataset
-use "`datapath'\version01\3-output\2008_2013_2014_cancer_survival", clear
+use "`datapath'\version02\3-output\2008_2013_2014_cancer_survival", clear
 
 count //927
 
