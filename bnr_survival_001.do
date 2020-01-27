@@ -35,7 +35,7 @@
 **************************************************************************
 
 ** Load the dataset
-use "`datapath'\version01\1-input\2008_2013_2014_cancer_survival", clear
+use "`datapath'\version01\1-input\datarequest_NAACCR-IACR_matched_2008", clear
 
 ** first we have to restrict dataset to patients not tumours
 drop if patient!=1
