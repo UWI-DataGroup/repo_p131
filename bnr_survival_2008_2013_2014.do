@@ -277,7 +277,7 @@ restore
 
 ** MERGE WITH 2010 BARBADOS POPULATION
 drop _merge
-merge m:m sex age_10 using "`datapath'\version01\1-input\bb2010_10-2.dta"
+merge m:m sex age_10 using "`datapath'\version01\2-working\bb2010_10-2.dta"
 
 ** MORTALITY RATE RATES
 ** Comparing gender
