@@ -35,7 +35,7 @@
 **************************************************************************
 
 ** Load the dataset
-use "`datapath'\version01\1-input\2008_updated_cancer_dataset_site_cod2", clear
+use "`datapath'\version01\1-input\2008_2013_2014_cancer_survival", clear
 
 ** first we have to restrict dataset to patients not tumours
 drop if patient!=1
@@ -210,7 +210,7 @@ sts graph
         name(figure1)
         ;
 #delimit cr
-
+/*
 
 ** GRAPH 2
 ** K-M stratified by sex
