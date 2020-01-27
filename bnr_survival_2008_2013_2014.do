@@ -33,11 +33,11 @@
 
 * ************************************************************************
 * SURVIVAL ANALYSIS
-* Survival analysis to 3 years
+* Survival analysis to 5 years
 **************************************************************************
 
 ** Load the dataset
-use "`datapath'\version01\3-output\datarequest_NAACCR-IACR_matched_2014", clear
+use "`datapath'\version01\3-output\2008_2013_2014_cancer_survival", clear
 
 count //927
 
@@ -167,7 +167,7 @@ replace time=1 if (time==0 & deceased==0) //238 changes
 ** Now survival time set the dataset using newend_date as the time variable and deceased
 ** as the failure variable
 stset newend_date , failure(deceased) origin(dot) scale(365.25)
-** IRH (12feb2019) tab _st // 1049 observations contribute to analysis
+** IRH (12feb2019) tab _st // 912 observations contribute to analysis
 stdes
 
 ** GRAPH 1
