@@ -21,9 +21,9 @@
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p117"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p117
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
     ** Close any open log file and open a new log file
     capture log close
@@ -39,11 +39,11 @@
 ** Load the dataset
 use "`datapath'\version02\3-output\2008_2013_2014_cancer_survival", clear
 
-count //927
+count //2250
 
 ** first we have to restrict dataset to patients not tumours
 drop if patient!=1
-count //912
+count //2250
 
 ** now ensure everyone has a unique id
 count if pid=="" //0
@@ -174,7 +174,7 @@ stdes
 ** K-M unstratified
 #delimit ;
 sts graph
-        if siteiarc == 29,
+        if siteiarc == 39,
         plotregion(c(gs16) lw(vthin) ic(gs16) ilw(vthin) )
         graphregion(color(gs16) ic(gs16) ilw(vthin) lw(vthin))
         ysize(10) xsize(7.5)
