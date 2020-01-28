@@ -1,6 +1,6 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name			    bnr_survival_2014.do
+    //  algorithm name			    bnr_survival_2008_2013_2014.do
     //  project:				        BNR
     //  analysts:				       	Ian HAMBLETON, Jacqueline CAMPBELL
     //  date first created      12-FEB-2019
@@ -21,7 +21,7 @@
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p117"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
     local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p117
 
@@ -33,7 +33,7 @@
 
 * ************************************************************************
 * SURVIVAL ANALYSIS
-* Survival analysis to 5 years
+* Survival analysis to 3 years
 **************************************************************************
 
 ** Load the dataset
