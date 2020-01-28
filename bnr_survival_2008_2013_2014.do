@@ -23,7 +23,7 @@
     ** DATASETS to encrypted SharePoint folder
     local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p117"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p117
 
     ** Close any open log file and open a new log file
     capture log close
@@ -167,14 +167,14 @@ replace time=1 if (time==0 & deceased==0) //238 changes
 ** Now survival time set the dataset using newend_date as the time variable and deceased
 ** as the failure variable
 stset newend_date , failure(deceased) origin(dot) scale(365.25)
-** IRH (12feb2019) tab _st // 912 observations contribute to analysis
+** IRH (12feb2019) tab _st // 2,203 observations contribute to analysis
 stdes
 
 ** GRAPH 1
 ** K-M unstratified
 #delimit ;
 sts graph
-        ,
+        if siteiarc == 29,
         plotregion(c(gs16) lw(vthin) ic(gs16) ilw(vthin) )
         graphregion(color(gs16) ic(gs16) ilw(vthin) lw(vthin))
         ysize(10) xsize(7.5)
