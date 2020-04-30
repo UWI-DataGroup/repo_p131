@@ -1,13 +1,12 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name			    1a_deaths_2008-2012.do
-    //  project:				        BNR
-    //  analysts:				       	Jacqueline CAMPBELL
+    //  algorithm name              1a_deaths_2008-2012.do
+    //  project:                        BNR
+    //  analysts:                       Jacqueline CAMPBELL
     //  date first created      07-FEB-2019
-    // 	date last modified	    12-FEB-2019
-    //  algorithm task			    Preparing 2008-2012 death data for matching with 2008 cancer data
+    //  date last modified      12-FEB-2019
+    //  algorithm task              Preparing 2008-2012 death data for matching with 2008 cancer data
     //  status                  Completed
-
 
     ** General algorithm set-up
     version 15
@@ -19,9 +18,9 @@
     ** Initialising the STATA log and allow automatic page scrolling
     capture {
             program drop _all
-    	drop _all
-    	log close
-    	}
+        drop _all
+        log close
+        }
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
@@ -62,7 +61,6 @@ tostring nrn, replace
 ** Also - code to split full name into 2 variables fname and lname - else can't merge!
 split pname, parse(", "" ") gen(name)
 order deathid pname name1 name2 name3 name4 name5 name6 name7
-
 
 ** First, sort cases that contain only a first name and a last name
 count if name3=="" & name4=="" & name5=="" & name6=="" & name7=="" //8,857
@@ -211,13 +209,11 @@ replace name4=name3+name4 if tempvarn==5 & name3=="MC" //3 changes
 replace name4="" if tempvarn==5 //195 changes
 replace name3="" if tempvarn==5 //186 changes
 
-
 count if name6=="" & name3!="" //2,667
 list deathid pname name1 name2 name3 if name6=="" & name3!=""
 replace name6=name3 if name6=="" & name3!="" //2,667 changes
 count if name6=="" & name2!="" //0
 count if name6=="" & name1!="" //0
-
 
 count if length(name1)<2 //2
 list deathid *name* if length(name1)<2
