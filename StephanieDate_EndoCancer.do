@@ -48,12 +48,12 @@ tab dodyear ,m
 list record_id redcap_event_name if dodyear==. //all tracking
 list record_id if dodyear==. & redcap_event_name=="death_data_collect_arm_1" //0
 drop if redcap_event_name=="tracking_arm_2" //126 deleted
-drop if dodyear>2018 //2137 deleted
+//drop if dodyear>2018 //2137 deleted
 count if namematch==3 //2
 list record_id duprec if namematch==3
 drop if namematch==3 //2 deleted
 
-count //26,835
+count //26,972
 
 ** Format dataset
 ************************
@@ -190,33 +190,35 @@ drop redcap_event_name dddoa ddda odda certtype regnum district mstatus occu pod
 
 ** Create full dataset with all deaths
 count //26.835
-label data "BNR MORTALITY data 2008-2018"
+label data "BNR MORTALITY data 2008-2019"
 notes _dta :These data prepared from BB national death register & Redcap deathdata database
-save "`datapath'\version05\2-working\2008-2018_deaths_all" ,replace
+save "`datapath'\version05\2-working\2008-2019_deaths_all" ,replace
 
 ** Export full death dataset and share via encrypted Sync link
 sort record_id
-export_excel using "`datapath'\version05\3-output\2020-06-10_AllDeaths_2008-2018_variables.xlsx", firstrow(variables) replace
-export_excel using "`datapath'\version05\3-output\2020-06-10_AllDeaths_2008-2018_labels.xlsx", firstrow(varlabels) replace
+export_excel using "`datapath'\version05\3-output\2020-06-12_AllDeaths_2008-2019_variables.xlsx", firstrow(variables) replace
+export_excel using "`datapath'\version05\3-output\2020-06-12_AllDeaths_2008-2019_labels.xlsx", firstrow(varlabels) replace
 
 ** Create Endometrial cancer-related dataset
-count if regexm(cod1a, "ENDOMET") //179
-count if regexm(cod1b, "ENDOMET") //5
-count if regexm(cod1c, "ENDOMET") //0
+count if regexm(cod1a, "ENDOMET") //179; 193
+count if regexm(cod1b, "ENDOMET") //5; 8
+count if regexm(cod1c, "ENDOMET") //0; 1
 count if regexm(cod1d, "ENDOMET") //0
-count if regexm(cod2a, "ENDOMET") //0
+count if regexm(cod2a, "ENDOMET") //0; 1
 count if regexm(cod2b, "ENDOMET") //0
 
 list record_id dodyear cod1a if regexm(cod1a, "ENDOMET"), string(130)
 list record_id dodyear cod1a cod1b if regexm(cod1b, "ENDOMET"), string(130)
-keep if regexm(cod1a, "ENDOMET")|regexm(cod1b, "ENDOMET") //26,651 deleted
+list record_id dodyear cod1a cod1b cod1c if regexm(cod1c, "ENDOMET"), string(130)
+list record_id dodyear cod1a cod1b cod1c cod2a if regexm(cod2a, "ENDOMET"), string(130)
+keep if regexm(cod1a, "ENDOMET")|regexm(cod1b, "ENDOMET")|regexm(cod1c, "ENDOMET")|regexm(cod1d, "ENDOMET")|regexm(cod2a, "ENDOMET")|regexm(cod2b, "ENDOMET") //26,651 deleted
 
-count //184
+count //184; 202
 label data "BNR MORTALITY data 2008-2018: Endometrial cancer deaths"
 notes _dta :These data prepared from BB national death register & Redcap deathdata database
 save "`datapath'\version05\2-working\2008-2018_deaths_endometrial" ,replace
 
 ** Export customized death dataset and share via encrypted Sync link
 sort record_id
-export_excel using "`datapath'\version05\3-output\2020-06-10_EndometrialCancers_2008-2018_variables.xlsx", firstrow(variables) replace
-export_excel using "`datapath'\version05\3-output\2020-06-10_EndometrialCancers_2008-2018_labels.xlsx", firstrow(varlabels) replace
+export_excel using "`datapath'\version05\3-output\2020-06-12_EndometrialCancers_2008-2019_variables.xlsx", firstrow(variables) replace
+export_excel using "`datapath'\version05\3-output\2020-06-12_EndometrialCancers_2008-2019_labels.xlsx", firstrow(varlabels) replace
