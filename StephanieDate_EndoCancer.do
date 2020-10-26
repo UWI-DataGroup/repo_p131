@@ -4,7 +4,7 @@
     //  project:                DataGroup
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      10-JUN-2020
-    // 	date last modified      11-JUN-2020
+    // 	date last modified      10-JUN-2020
     //  algorithm task          Prep, format and filter death data 2008-2018
     //  status                  Completed
     //  objectve                To have one dataset with 2008-2018 endometrial cancer-related deaths.
