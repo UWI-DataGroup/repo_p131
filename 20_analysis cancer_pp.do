@@ -2,7 +2,7 @@
 cls
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          20_analysis cancer.do
+    //  algorithm name          20_analysis cancer_pp.do
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      10-DEC-2020
