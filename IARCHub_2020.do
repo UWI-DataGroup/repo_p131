@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      26-OCT-2020
-    // 	date last modified      27-OCT-2020
+    // 	date last modified      20-JAN-2021
     //  algorithm task          Preparing 2008, 2013-2015 cancer dataset for quality assessment by IARC Hub per data use/sharing agreement
     //  status                  Completed
     //  objective               To have one dataset with cleaned and grouped 2008, 2013, 2014 data for export to IARC Hub via Sync link.
@@ -98,6 +98,10 @@ gen regnum=pid + "01" if eidmp==1 //3699
 replace regnum=pid + "02" if regnum=="" //83 changes
 label var regnum "Registration Number"
 
+gen mpseq="1" if eidmp==1 //3699
+replace mpseq="2" if mpseq=="" //83 changes
+label var mpseq "Multiple Primary Sequence Number"
+
 label var pid "CanReg5 Record ID"
 label var sex "Sex"
 label var dob "Birth Date"
@@ -111,9 +115,11 @@ label var basis "Basis of Diagnosis"
 ** Remove variables not needed for this export
 drop cr5id eidmp
 
+** Create mpseq using regnum
+
 ** Create data dictionary
-export excel using "`datapath'\version06\3-output\2008_2013_2014_2015_iarchub_variables.xlsx", sheet("data") first(variables) nolabel replace
-export excel using "`datapath'\version06\3-output\2008_2013_2014_2015_iarchub_labels.xlsx", sheet("data") first(varlabels) replace
+export excel using "`datapath'\version06\3-output\2008_2013_2014_2015_iarchub_variablesV02.xlsx", sheet("data") first(variables) nolabel replace
+export excel using "`datapath'\version06\3-output\2008_2013_2014_2015_iarchub_labelsV02.xlsx", sheet("data") first(varlabels) replace
 
 ** Save coded labels and above notes into a Word document
 preserve
@@ -161,9 +167,9 @@ putdocx text ("BNR-Cancer: Notes + Data Codes"), bold
 putdocx paragraph
 putdocx text ("Time Period: 2008, 2013-2015") 
 putdocx paragraph
-putdocx text ("Date Prepared: 26-OCT-2020") 
+putdocx text ("Date Prepared: 20-JAN-2021") 
 putdocx paragraph
-putdocx text ("Prepared by: Jacqueline Campbell using Stata data release date: 26-Oct-2020")
+putdocx text ("Prepared by: Jacqueline Campbell using Stata data release date: 20-Jan-2021")
 putdocx paragraph, halign(center)
 putdocx text ("Notes"), bold font(Helvetica,10,"blue")
 putdocx textblock begin
@@ -204,7 +210,7 @@ putdocx textfile "`datapath'\version06\3-output\grade.txt"
 putdocx paragraph
 putdocx text ("Basis of Diagnosis codes:") ,bold
 putdocx textfile "`datapath'\version06\3-output\basis.txt"
-putdocx save "`datapath'\version06\3-output\2020-10-26_notes + codes.docx", replace
+putdocx save "`datapath'\version06\3-output\2021-01-20_notes + codes.docx", replace
 putdocx clear
 
 save "`datapath'\version06\3-output\2008_2013_2014_2015_iarchub", replace
