@@ -1,13 +1,14 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          10_prep_mort.do
+    //  algorithm name          PC+CVD2021.do
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
-    //  date first created      03-MAR-2021
-    // 	date last modified      04-MAR-2021
+    //  date first created      09-MAR-2021
+    // 	date last modified      09-MAR-2021
     //  algorithm task          Prep and format death data
     //  status                  Completed
-    //  objective               To have multiple datasets with cleaned death data for matching and reporting.
+    //  objective               To identify deaths with COD of prostate cancer and stroke/AMI, 
+    //                          as requested by Shelly-Ann Forde via WhatsApp 08-MAR-2021.
     
     ** General algorithm set-up
     version 16.0
@@ -24,13 +25,13 @@
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p117"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p117
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\10_prep_mort.smcl", replace
+    log using "`logpath'\PC+CVD_2021.smcl", replace
 ** HEADER -----------------------------------------------------
 
 ***************
@@ -54,9 +55,9 @@
 		tfdddoaend:		yyyy-mm-dd hh:mm
 		tfdddoatend:	hh:mm
 */
-import excel using "`datapath'\version04\1-input\BNRDeathData20082020_DATA_2021-03-03_1930_excel.xlsx" , firstrow case(lower)
+import excel using "`datapath'\version08\1-input\BNRDeathData20082020_DATA_2021-03-09_1405_excel.xlsx" , firstrow case(lower)
 
-count //31,179
+count //31,173
 
 *******************
 ** DATA FORMATTING  
@@ -352,25 +353,26 @@ order record_id event dddoa ddda odda certtype regnum district pname address par
       tfdddoa tfdddoatstart tfddda tfregnumstart tfdistrictstart tfregnumend tfdistrictend ///
 	  tfdddoaend tfdddoatend tfddelapsedh tfddelapsedm tfddtxt recstattf
 
-count //31,179
+count //31,173
 
 label data "BNR MORTALITY data 2008-2020 (2020 incomplete)"
 notes _dta :These data prepared from BB national death register & Redcap deathdata database
-save "`datapath'\version04\3-output\2008-2020_deaths_tf" ,replace
+save "`datapath'\version08\3-output\2008-2020_deaths_tf" ,replace
 note: TS The tracking form data is included in this dataset
 
 **********************
 **     Preparing    **
-**    2016, 2017,   **
-**    2018, 2019    **
+**    2008 to 2019  **
 **      Deaths      **
 **********************
-** Next we get rid of those who died pre-2016
-drop if dod<d(01jan2016) | dod>d(31dec2019) //20,638 deleted (removed 2020 deaths as that year still incomplete as of 03mar2021)
+** Next we get rid of those who died pre-2008 and post-2019
+drop if dod<d(01jan2008) | dod>d(31dec2019) //1554 deleted (removed 2020 deaths as that year still incomplete as of 09mar2021)
 ** Remove Tracking Form info
-drop if event==2 //212 deleted
+drop if event==2 //0 deleted
 
-count //10,329
+drop tfdddoa tfdddoatstart tfddda tfregnumstart tfdistrictstart tfregnumend tfdistrictend tfdddoaend tfdddoatend tfddelapsedh tfddelapsedm tfddtxt recstattf tfddda2
+
+count //29,620
 
 *****************
 **  Formatting **
@@ -400,20 +402,28 @@ replace name5=name2 if name5=="" & name3=="" & name4=="" //7681
 replace name2="" if name3=="" & name4=="" //7681
 
 ** (2) sort cases with name 'baby' or 'b/o' in name1 variable
-count if (regexm(pname,"BABY")|regexm(pname,"B/O")|regexm(pname,"MALE")|regexm(pname,"FEMALE")) //35
-gen tempvarn=1 if (regexm(pname,"BABY")|regexm(pname,"B/O")|regexm(pname,"MALE")|regexm(pname,"FEMALE")) & record_id!=20375 & record_id!=28310
+count if (regexm(pname,"BABY")|regexm(pname,"B/O")|regexm(pname,"MALE")|regexm(pname,"FEMALE")) //133
+gen tempvarn=1 if (regexm(pname,"BABY")|regexm(pname,"B/O")|regexm(pname,"MALE")|regexm(pname,"FEMALE")) & record_id!=3248 & record_id!=3420 & record_id!=11883 & record_id!=15782 & record_id!=20375 & record_id!=28310
 //list record_id pname name1 name2 name3 name4 name5 if tempvarn==1
 //list record_id pname name6 name7 if tempvarn==1
-replace name1=name1+" "+name2 if tempvarn==1 & (record_id!=24442 & record_id!=25511 & record_id!=26692 & record_id!=26885 & record_id!=28087 & record_id!=28164 & record_id!=28494) //26 changes
+replace name1=name1+" "+name2 if tempvarn==1 & (record_id!=17694 & record_id!=18770 & record_id!=24442 & record_id!=25511 & record_id!=26692 & record_id!=26885 & record_id!=28087 & record_id!=28164 & record_id!=28494) //118 changes
+drop if record_id==17407 //it's a duplicate of record_id=17408 - also deleted it from REDCap 2008-2020 db on 09mar2021
 replace name1=name1+" "+name3 if record_id==24336
-replace name2="" if name2=="OF"|name2=="INFANT" //26 changes
+replace name2="" if name2=="OF"|name2=="INFANT" //119 changes
 replace name3="" if name3=="OF" //1 change
-replace name2=name3 if tempvarn==1 & (record_id!=24442 & record_id!=25511 & record_id!=26692 & record_id!=26885 & record_id!=28087 & record_id!=28164 & record_id!=28494) //25 changes
+replace name2=name3 if tempvarn==1 & (record_id!=17694 & record_id!=18770 & record_id!=24442 & record_id!=25511 & record_id!=26692 & record_id!=26885 & record_id!=28087 & record_id!=28164 & record_id!=28494) //116 changes
 replace name2=name4 if record_id==24336
 replace name3=name5 if record_id==24336
 replace name4="" if record_id==24336
 replace name5="" if record_id==24336
-replace name3=name4 if tempvarn==1 & name4!="" & (record_id!=24442 & record_id!=25511 & record_id!=26692 & record_id!=26885 & record_id!=24008 & record_id!=28087 & record_id!=28164 & record_id!=28494) //24 changes
+replace name3=name4 if tempvarn==1 & name4!="" & (record_id!=17694 & record_id!=18770 & record_id!=24442 & record_id!=25511 & record_id!=26692 & record_id!=26885 & record_id!=24008 & record_id!=28087 & record_id!=28164 & record_id!=28494) //115 changes
+replace name2=name2+" "+name3 if tempvarn==1 & (record_id==809|record_id==1444|record_id==4478|record_id==6734)
+replace name3=name5 if record_id==809|record_id==1444|record_id==4478|record_id==6734
+replace name4="" if record_id==809|record_id==1444|record_id==4478|record_id==6734|record_id==6894
+replace name5="" if record_id==809|record_id==1444|record_id==4478|record_id==6734|record_id==6894
+replace name1=name1+" "+"["+name6+" "+name7+"]" if record_id==6894
+replace name6="" if record_id==6894
+replace name7="" if record_id==6894
 replace name2=name2+" "+name4+" "+name5 if record_id==24008
 replace name3=name6 if record_id==24008
 replace name2=name2+" "+name5+" "+name6+" "+name7 if record_id==26406
@@ -427,8 +437,8 @@ replace name1=name5+" "+name6 if record_id==28164
 replace name2=name8+" "+"("+name1+" "+name2+" "+name3+" "+name4+")" if record_id==28494
 replace name3=name4 if record_id==28494
 replace name1=name6+" "+name7 if record_id==28494
-replace name4="" if tempvarn==1 //29 changes
-replace name5="" if tempvarn==1 //6 changes
+replace name4="" if tempvarn==1 //115 changes
+replace name5="" if tempvarn==1 //8 changes
 replace name6="" if tempvarn==1 //6 changes
 replace name7="" if tempvarn==1 //4 changes
 replace name8="" if tempvarn==1 //2 changes
@@ -445,70 +455,109 @@ replace name5="" if record_id==25050
 replace name6="" if record_id==25050
 replace name7="" if record_id==25050
 
-** (4) sort cases with name in name5 variable
-count if name5!="" //7686
-count if name5!="" & name2!="" //7
-//list record_id *name* if name5!=""
-replace name2=name2+" "+name3+" "+name4 if record_id==20877|record_id==23269|record_id==24056
-replace name3="" if record_id==20877|record_id==23269|record_id==24056
-replace name4="" if record_id==20877|record_id==23269|record_id==24056
-replace name3=name5 if record_id==20877|record_id==23269|record_id==24056
-replace name5="" if record_id==20877|record_id==23269|record_id==24056
-replace name2=name2+" "+name3+name4 if record_id==25248
-replace name1=name1+"."+name2 if record_id==22814
-replace name2=name3+"."+name4 if record_id==22814
-replace name4="" if record_id==22814|record_id==25248
-replace name3=name5 if record_id==22814|record_id==25248
-replace name5="" if record_id==22814|record_id==25248
-replace name2=name2+" "+name3 if record_id==20790
-replace name3=name4+"."+" "+name5 if record_id==20790
-replace name2=name2+" "+name3+"."+" "+name4 if record_id==29474
-replace name3=name5 if record_id==29474
-replace name4="" if name5!="" & name2!="" //2 changes
-replace name5="" if name5!="" & name2!="" //2 changes
-replace name3=name5 if name5!="" //7681 changes
-replace name5="" if name5!="" //7681 changes
-
-** (5)
+** (4)
 ** Names containing 'ST' are being interpreted as 'ST'=name1/fname so correct
-count if name1=="ST" | name1=="ST." //16
+count if name1=="ST" | name1=="ST." //57
 replace tempvarn=2 if name1=="ST" | name1=="ST."
 //list record_id pname name1 name2 name5 if tempvarn==2
-replace name1=name1+"."+""+name2 if tempvarn==2 //16 changes
-replace name2="" if tempvarn==2 //16 changes
-replace name2=name3 if record_id==24517|record_id==20508
-replace name3=name4 if record_id==24517|record_id==20508
-replace name4="" if record_id==24517|record_id==20508
-replace name1 = subinstr(name1, ".", "",1) if record_id==24517|record_id==24774|record_id==27531
-** Names containing 'ST' are being interpreted as 'ST'=name2/fname so correct
-count if name2=="ST" | name2=="ST." //49
+replace name1=name1+"."+""+name2 if tempvarn==2 & !(strmatch(strupper(name1), "*ST.*")) //43 changes
+replace name1=name1+name2 if tempvarn==2 & name1=="ST." //14 changes
+replace name2="" if tempvarn==2 //57 changes
+replace name2=name3+"."+name4 if record_id==22814
+replace name3=name5 if record_id==22814
+replace name2=name3+" "+name4 if record_id==18395
+replace name3=name5 if record_id==18395
+replace name3=name3+name4 if record_id==4319
+replace name4="" if record_id==4319|record_id==22814|record_id==18395
+replace name5="" if record_id==22814|record_id==18395
+replace name2=name3 if tempvarn==2 & name3!="" & name4!="" //7 changes
+replace name3=name4 if tempvarn==2 & name3!="" & name4!="" //7 changes
+replace name4="" if tempvarn==2 & name4!="" //7 changes
+
+** Names containing 'ST' are being interpreted as 'ST'=name2 so correct
+count if name2=="ST" | name2=="ST." //131
 replace tempvarn=3 if name2=="ST" | name2=="ST."
-replace name2=name2+"."+""+name3 if tempvarn==3 //49 changes
-replace name2 = subinstr(name2, ".", "",1) if record_id==19323|record_id==19969|record_id==24127|record_id==25166|record_id==25420|record_id==25984|record_id==26481|record_id==26593|record_id==26936|record_id==27093|record_id==27095|record_id==29700|record_id==29701
-replace name3=name2 if tempvarn==3 & name4=="" //16 changes
-replace name2="" if tempvarn==3 & name4=="" //16 changes
-replace name3="" if tempvarn==3 & name4!="" //33 changes
-replace name3=name4 if tempvarn==3 & name4!="" //33 changes
-replace name4="" if tempvarn==3 //33 changes
-//replace name3=name2 if tempvarn==3 & name3=="" //4 changes
-//replace name2="" if tempvarn==3 & name2==name3
-** Names containing 'ST' are being interpreted as 'ST'=name3/fname so correct
-count if name3=="ST" | name3=="ST." //5
+replace name2=name2+"."+""+name3 if tempvarn==3 & !(strmatch(strupper(name2), "*ST.*")) //84 changes
+replace name2=name2+name3 if tempvarn==3 & name2=="ST." //47 changes
+replace name2=name2+" "+name4 if record_id==6370
+replace name3=name5 if record_id==6370
+replace name4="" if record_id==6370
+replace name5="" if record_id==6370
+replace name3=name2 if tempvarn==3 & name4=="" & record_id!=6370 //39 changes
+replace name2="" if tempvarn==3 & name4=="" & record_id!=6370 //39 changes
+replace name3=name4 if tempvarn==3 & name4!="" //91 changes
+replace name4="" if tempvarn==3 & name4!="" //91 changes
+
+** Names containing 'ST' are being interpreted as 'ST'=name3 so correct
+count if name3=="ST" | name3=="ST." //23
 replace tempvarn=4 if name3=="ST" | name3=="ST."
-replace name3=name3+"."+""+name4 if tempvarn==4 //5 changes
-replace name4="" if tempvarn==4 //5 changes
+replace name3=name3+"."+""+name4 if tempvarn==4 & !(strmatch(strupper(name3), "*ST.*")) //15 changes
+replace name3=name3+name4 if tempvarn==4 & name3=="ST." //7 changes
+replace name3=name3+substr(pname,-4,4) if record_id==11044|record_id==14625
+replace name2=name2+" "+name3 if tempvarn==4 & (record_id==3619|record_id==9628|record_id==25248|record_id==29474)
+replace name3=name5 if tempvarn==4 & (record_id==3619|record_id==9628|record_id==25248|record_id==29474)
+replace name4="" if tempvarn==4 //21 changes
+replace name5="" if tempvarn==4 //4 changes
+drop if record_id==17862 //duplicate of record_id=17863 - also deleted in REDCap 2008-2020 db
 
-** (6) sort cases with name in name4 variable
-count if name4!="" //135
+** Names containing 'ST' are being interpreted as 'ST'=name4 so correct
+count if name4=="ST" | name4=="ST." //1
+replace tempvarn=5 if name4=="ST" | name4=="ST."
+replace name2=name2+" "+name3 if record_id==20790
+replace name3=name4+"."+name5 if record_id==20790
+replace name4="" if record_id==20790
+replace name5="" if record_id==20790
+
+count if name5=="ST" | name5=="ST." //0
+count if name6=="ST" | name6=="ST." //0
+count if name7=="ST" | name7=="ST." //0
+count if name8=="ST" | name8=="ST." //0
+count if name9=="ST" | name9=="ST." //0
+
+** (5) sort cases with name in name5 variable
+count if name5!="" //22,115
+count if name5!="" & name2!="" //12
+//list record_id *name* if name5!=""
+replace name2=name2+" "+name3+" "+name4 if name5!="" & name2!="" //12 changes
+replace name3=name5 if name5!="" & name2!="" //12 changes
+replace name4="" if name5!="" & name2!="" //12 changes
+replace name5="" if name5!="" & name2!="" //12 changes
+count if name5!="" & name3!="" //0
+count if name5!="" & name4!="" //0
+count if name5!="" & name6!="" //0
+count if name5!="" & name7!="" //0
+count if name5!="" & name8!="" //0
+count if name5!="" & name9!="" //0
+replace name3=name5 if name5!="" //22,103 changes
+replace name5="" if name5!="" //22,103 changes
+
+** (6) sort cases with suffixes
+count if (name3!="" & name3!="99") & length(name3)<4 //299 - 2 need correcting
+replace tempvarn=6 if (name3!="" & name3!="99") & length(name3)<4
+//list record_id pname fname mname lname if (lname!="" & lname!="99") & length(lname)<3
+replace name3=name2+" "+name3 if record_id==18039|record_id==24107
+replace name2="" if record_id==18039|record_id==24107
+replace name2=name2+" "+name3 if tempvarn==6 & name4!="" & record_id!=18039 & record_id!=24107 //78 changes
+replace name3=name4 if tempvarn==6 & name4!="" & record_id!=18039 & record_id!=24107 //78 changes
+replace name4="" if tempvarn==6 & name4!="" //78 changes
+
+count if (name4!="" & name4!="99") & length(name4)<4 //6 - 2 need correcting
+replace tempvarn=7 if (name4!="" & name4!="99") & length(name4)<4
+replace name2=name2+" "+name3 if record_id==22671|record_id==4294
+replace name3=name4 if record_id==22671|record_id==4294
+replace name3=name3+" "+name4 if tempvarn==7 & record_id!=22671 & record_id!=4294
+replace name4="" if tempvarn==7 //6 changes
+
+** (7) sort cases with name in name4 variable
+count if name4!="" //334
 //list record_id *name* if name4!=""
-replace name3=name3+" "+name4 if record_id==20249
-replace name3=name3+"-"+name4 if record_id==19428
-replace name4="" if record_id==20249|record_id==19428
-replace name2=name2+" "+name3 if name4!="" //133 changes
-replace name3=name4 if name4!="" //133 changes
-replace name4="" if name4!="" //133 changes
+replace name3=name3+" "+name4 if record_id==9928
+replace name4="" if record_id==9928
+replace name2=name2+" "+name3 if name4!="" //333 changes
+replace name3=name4 if name4!="" //333 changes
+replace name4="" if name4!="" //333 changes
 
-** (7) sort cases with NO name in name3 variable
+** (8) sort cases with NO name in name3 variable
 count if name3=="" //5
 //list record_id *name* if name3==""
 replace name3=substr(name1,6,11) if record_id==25303
@@ -517,14 +566,7 @@ replace name3=substr(name1,8,7) if record_id==25414
 replace name2=substr(name1,7,1) if record_id==25414
 replace name1=substr(name1,1,6) if record_id==25414
 replace name3="99" if name3=="" //3 changes
-
-** (8) sort cases with suffixes
-count if (name3!="" & name3!="99") & length(name3)<4 //89 - 2 need correcting
-replace tempvarn=5 if (name3!="" & name3!="99") & length(name3)<4
-//list record_id pname fname mname lname if (lname!="" & lname!="99") & length(lname)<3
-drop if record_id==24108 //1 deleted - same as record_id=24107
-replace name3=name2+" "+name3 if record_id==24107
-replace name2="" if record_id==24107
+replace name3="99" if record_id==704
 
 ** Now rename, check and remove unnecessary variables
 rename name1 fname
@@ -535,14 +577,15 @@ count if lname=="" //0
 drop name4 name5 name6 name7 name8 name9 tempvarn
 
 ** Convert names to lower case and strip possible leading/trailing blanks
-replace fname = lower(rtrim(ltrim(itrim(fname)))) //10,328 changes
-replace mname = lower(rtrim(ltrim(itrim(mname)))) //2,608 changes
-replace lname = lower(rtrim(ltrim(itrim(lname)))) //10,325 changes
+replace fname = lower(rtrim(ltrim(itrim(fname)))) //29,618 changes
+replace mname = lower(rtrim(ltrim(itrim(mname)))) //7,418 changes
+replace lname = lower(rtrim(ltrim(itrim(lname)))) //29,614 changes
 
 rename nm namematch
 order record_id pname fname mname lname namematch
 
-*************************
+STOP
+******************
 ** Checking & Removing ** 
 **   Duplicate Death   **
 **    Registrations    **
@@ -988,3 +1031,4 @@ notes _dta :These data prepared from BB national death register & Redcap deathda
 save "`datapath'\version04\3-output\2018_deaths_for_matching" ,replace
 note: TS This dataset can be used for matching 2018 deaths with pre-cleaning incidence data
 
+stop
