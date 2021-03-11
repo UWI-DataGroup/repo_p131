@@ -686,15 +686,8 @@ capture export_excel record_id redcap_event_name namematch if nmflag==1 using "`
 drop nmflag
 
 count //29,607
-stop
-** Now generate a new variable which will select out all the potential cancers
-gen cancer=.
-label define cancer_lab 1 "cancer" 2 "not cancer", modify
-label values cancer cancer_lab
-label var cancer "cancer diagnoses"
-label var record_id "Event identifier for registry deaths"
 
-** searching cod1a for these terms
+** searching COD variables for these terms
 replace cod1a="99" if cod1a=="999" //0 changes
 replace cod1b="99" if cod1b=="999" //28 changes
 replace cod1c="99" if cod1c=="999" //46 changes
@@ -705,54 +698,135 @@ count if cod1c!="99" //1130
 count if cod1d!="99" //281
 count if cod2a!="99" //2132
 count if cod2b!="99" //970
-//ssc install unique
-//ssc install distinct
+
 ** Create variable with combined CODs
 gen coddeath=cod1a+" "+cod1b+" "+cod1c+" "+cod1d+" "+cod2a+" "+cod2b
-replace coddeath=subinstr(coddeath,"99 ","",.) //10,187
-replace coddeath=subinstr(coddeath," 99","",.) //9,352
-** Identify cancer deaths using variable called 'cancer'
-replace cancer=1 if regexm(coddeath, "CANCER") & cancer==. //1403 changes
-replace cancer=1 if regexm(coddeath, "TUMOUR") &  cancer==. //56 changes
-replace cancer=1 if regexm(coddeath, "TUMOR") &  cancer==. //35 changes
-replace cancer=1 if regexm(coddeath, "MALIGNANT") &  cancer==. //29 changes
-replace cancer=1 if regexm(coddeath, "MALIGNANCY") &  cancer==. //134 changes
-replace cancer=1 if regexm(coddeath, "NEOPLASM") &  cancer==. //10 changes
-replace cancer=1 if regexm(coddeath, "CARCINOMA") &  cancer==. //691 changes
-replace cancer=1 if regexm(coddeath, "CARCIMONA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "CARINOMA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "MYELOMA") &  cancer==. //99 changes
-replace cancer=1 if regexm(coddeath, "LYMPHOMA") &  cancer==. //59 changes
-replace cancer=1 if regexm(coddeath, "LYMPHOMIA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "LYMPHONA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "SARCOMA") &  cancer==. //33 changes
-replace cancer=1 if regexm(coddeath, "TERATOMA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "LEUKEMIA") &  cancer==. //50 changes
-replace cancer=1 if regexm(coddeath, "LEUKAEMIA") &  cancer==. //13 changes
-replace cancer=1 if regexm(coddeath, "HEPATOMA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "CARANOMA PROSTATE") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "MENINGIOMA") &  cancer==. //8 changes
-replace cancer=1 if regexm(coddeath, "MYELOSIS") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "MYELOFIBROSIS") &  cancer==. //1 change
-replace cancer=1 if regexm(coddeath, "CYTHEMIA") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "CYTOSIS") &  cancer==. //2 change
-replace cancer=1 if regexm(coddeath, "BLASTOMA") &  cancer==. //7 changes
-replace cancer=1 if regexm(coddeath, "METASTATIC") &  cancer==. //18 changes
-replace cancer=1 if regexm(coddeath, "MASS") &  cancer==. //81 changes
-replace cancer=1 if regexm(coddeath, "METASTASES") &  cancer==. //5 changes
-replace cancer=1 if regexm(coddeath, "METASTASIS") &  cancer==. //1 change
-replace cancer=1 if regexm(coddeath, "REFRACTORY") &  cancer==. //2 changes
-replace cancer=1 if regexm(coddeath, "FUNGOIDES") &  cancer==. //2 change
-replace cancer=1 if regexm(coddeath, "HODGKIN") &  cancer==. //0 changes
-replace cancer=1 if regexm(coddeath, "MELANOMA") &  cancer==. //2 change
-replace cancer=1 if regexm(coddeath,"MYELODYS") &  cancer==. //6 changes
-replace cancer=1 if regexm(coddeath,"GLIOMA") &  cancer==. //1 change
-replace cancer=1 if regexm(coddeath,"MESOTHELIOMA") &  cancer==. //6 changes
+replace coddeath=subinstr(coddeath,"99 ","",.) //29,471
+replace coddeath=subinstr(coddeath," 99","",.) //28,636
 
 ** Strip possible leading/trailing blanks in cod1a
 replace coddeath = rtrim(ltrim(itrim(coddeath))) //0 changes
+order record_id coddeath
 
-tab cancer, missing
+** SF wants to know how many prostate cancers also have a stroke or AMI cause of death
+** Create a new variable which will select out all the potential prostate cancers
+gen prostate=.
+label define prostate_lab 1 "prostate cancer" 2 "not prostate cancer", modify
+label values prostate prostate_lab
+label var prostate "prostate cancer diagnoses"
+label var record_id "Event identifier for registry deaths"
+
+** Identify prostate cancer deaths using variable called 'prostate'
+replace prostate=1 if regexm(coddeath, "PROST") & !(strmatch(strupper(coddeath),"*BENIGN PROST*")) &  prostate==. //1490 changes
+replace prostate=1 if regexm(coddeath, "PRST") & !(strmatch(strupper(coddeath),"*BENIGN PROST*")) &  prostate==. //1 change
+replace prostate=1 if regexm(coddeath, "PROSTATE CANCER") &  prostate==. //1 change
+replace prostate=1 if regexm(coddeath, "PROSTATIC CANCER") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "CANCER PROSTATE") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "PROSTATIC CARCIN") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "OMA OF THE PROSTATE") &  prostate==. //1 change
+replace prostate=1 if regexm(coddeath, "PROSTATE CARCIN") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "CANCER OF PROSTATE") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "CANCER OF THE PROSTATE") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "PRSTATIC CARCIN") &  prostate==. //0 changes
+replace prostate=1 if regexm(coddeath, "PRSTATE") &  prostate==. //1 change
+replace prostate=1 if regexm(coddeath, "CARANOMA PROSTATE") &  prostate==. //0 changes
+
+/*
+** SF wants to know how many prostate cancers also have a stroke or AMI cause of death
+** Create a new variable which will select out all the potential strokes
+gen stroke=.
+label define stroke_lab 1 "stroke" 2 "not stroke", modify
+label values stroke stroke_lab
+label var stroke "stroke diagnoses"
+
+** Identify stroke deaths using variable called 'stroke'
+replace stroke=1 if regexm(coddeath, "STROKE") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "CVA") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "CEREBROVASCULAR ACCIDENT") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "CEREBRAL ACCIDENT") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "CEREBRAL VASCULAR ACCIDENT") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "SUBARACH") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "INTRACEREBRAL") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "PARENCHYMAL") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "LACUNAR") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "THROMBOEMBOLIC CEREBRAL") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "RIND") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "MIDDLE CEREBRAL") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "POSTERIOR CEREBRAL") &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "REVERSIBLE") & !(strmatch(strupper(coddeath), "*IRREVERSIBLE*")) &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "INFARCT") & !(strmatch(strupper(coddeath), "*MYOCARD*")) &  stroke==. // changes
+replace stroke=1 if regexm(coddeath, "LOCKED") & !(strmatch(strupper(coddeath), "*BLOCKED*")) &  stroke==. // changes
+
+** SF wants to know how many prostate cancers also have a stroke or AMI cause of death
+** Create a new variable which will select out all the potential AMIs
+gen heart=.
+label define heart_lab 1 "heart" 2 "not heart", modify
+label values heart heart_lab
+label var heart "heart diagnoses"
+
+** Identify stroke deaths using variable called 'heart'
+replace heart=1 if regexm(coddeath, "CARDIAL INFARCT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CARDIAL INFRACT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CARDIAL IFARCT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CARDIAL INFACRT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CARDIAL INFERCT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CARDIAL ATTACK") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "HEART ATTACK") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "ELEVATION") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "WAVE INFARCT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "WAVE INFRACT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "WAVE IFARCT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "WAVE INFACRT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "WAVE INFERCT") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "WAVE ATTACK") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CORONARY THROMB") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CORONARY OCCLU") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "CORONARY SYNDROME") &  heart==. // changes
+replace heart=1 if regexm(coddeath, "SUDDEN CARDIAC DEATH") &  heart==. // changes
+
+** In stata browser I checked for myocardial conditions other than AMI to spot spelling errors
+count if regexm(coddeath,"MYOCARD") & !(strmatch(strupper(coddeath),"*INFARCTION*")) & !(strmatch(strupper(coddeath),"*INFARCT*")) & !(strmatch(strupper(coddeath),"*INFRACTION*"))
+*/
+** Emailed NS/AH on 11mar2021 for guidance on flagging CVD CODs, as noted below
+/*
+Hi Natasha / Ashley,
+
+I’m trying to pull out of death data all prostate cancers, strokes and AMIs as requested by Shelly.
+I used the CVD SOP stroke and AMI diagnoses – the PDFs are attached.
+
+Please can you provide guidance on the below:
+
+(1)	CARDIOGENIC SHOCK MYOCARDIAL RUPTURE – this COD doesn’t indicate whether rupture was due to trauma or if it’s a sequela of an AMI but since cardiogenic shock is most commonly caused by AMIs, should I assume and include it under AMI or exclude it?
+
+(2)	CORONARY THROMBOSIS without AMI, e.g. CORONARY THROMBOSIS CORONARY ARTERY DISEASE or SUDDEN CARDIAC DEATH (NATURAL) CORONARY THROMBOSIS – are these to be included or excluded?
+
+(3)	Under what conditions is SUDDEN CARDIAC DEATH to be included in heart CODs?
+
+(4)	Under what conditions is ACUTE CORONARY SYNDROME to be included in heart CODs, e.g. include if only in the presence of AMI but exclude if only in the presence of unstable angina?
+
+(5)	In the CVD SOP, Stable/Unstable Angina and Angina Pectoris can included as reportable abstraction terms – does this also apply to CODs?
+
+(6)	When CVD is reporting on mortality, is the code below same as what is used when pulling out CVD CODs?:
+
+	a.	stroke CODs (note: I checked for the other stroke diagnoses and syndromes according to the SOP but didn’t find them in the CODs so left them out of the below code)
+		(screenshot of above code)
+		
+	b.	heart CODs
+		(screenshot of above code)
+*/
+
+** Generate lists for only 2015 - 2019 death years, as SF updated request on 11mar2021 from all years to just these.
+count if prostate==1 & dodyear>2014 //719
+count if stroke==1 & dodyear>2014
+count if heart==1 & dodyear>2014
+count if prostate!=1 & stroke!=1 & heart!=1 & dodyear>2014
+capture export_excel record_id coddeath prostate if prostate==1 & dodyear>2014 using "`datapath'\version08\3-output\2015-2019PROSTATEV01.xlsx", sheet("prostate") firstrow(variables)
+//capture export_excel record_id coddeath stroke if stroke==1 & dodyear>2014 using "`datapath'\version08\3-output\2015-2019STROKEV01.xlsx", sheet("stroke") firstrow(variables)
+//capture export_excel record_id coddeath heart if heart==1 & dodyear>2014  using "`datapath'\version08\3-output\2015-2019HEARTV01.xlsx", sheet("heart") firstrow(variables)
+//capture export_excel record_id coddeath prostate stroke heart if prostate!=1 & stroke!=1 & heart!=1 & dodyear>2014 using "`datapath'\version08\3-output\2015-2019NOFLAGV01.xlsx", sheet("NOTprostate/stroke/heart") firstrow(variables)
+STOP
+
+tab prostate, missing
 
 drop dodyear
 gen dodyear=year(dod)
