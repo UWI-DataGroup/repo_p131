@@ -584,7 +584,7 @@ replace lname = lower(rtrim(ltrim(itrim(lname)))) //29,614 changes
 rename nm namematch
 order record_id pname fname mname lname namematch
 
-STOP
+
 ******************
 ** Checking & Removing ** 
 **   Duplicate Death   **
@@ -598,10 +598,11 @@ so the field namematch can be used as a guide for checking duplicates
 */
 //label define namematch_lab 1 "deaths only namematch,diff.pt" 2 "no namematch" 3 "cr5 & death namematch,diff.pt" 4 "slc=2/9,not in deathdata", modify
 //label values namematch namematch_lab
-sort lname fname record_id
-quietly by lname fname : gen dupname = cond(_N==1,0,_n)
-sort lname fname record_id
-count if dupname>0 //646
+** Create string dod field so can using in duplicate matching
+gen dod2=dod
+format dod2 %tdCCYY-NN-DD
+tostring dod2 ,replace
+
 /* 
 Check below list for cases where namematch=no match but 
 there is a pt with same name then:
@@ -610,68 +611,28 @@ there is a pt with same name then:
 	 update namematch variable to reflect this, i.e.
 	 namematch=1
 */
-//list record_id namematch fname lname nrn dod sex age if dupname>0
-drop if record_id==26532 //1 deleted - duplicate registration for record_id=26283
-drop if record_id==25379 //1 deleted - duplicate registration for record_id=26481
-drop if record_id==27002 //1 deleted - duplicate registration for record_id=26778
-replace cod1c=cod1a if record_id==27642
-replace certtype=3 if record_id==27642
-replace cod1a="SMALL BOWEL OBSTRUCTION" if record_id==27642
-replace onsetnumcod1a=999 if record_id==27642
-replace onsettxtcod1a=. if record_id==27642
-replace cod1b="STRANGULATED INGUINAL HERNIA" if record_id==27642
-replace onsetnumcod1b=999 if record_id==27642
-replace onsetnumcod1c=99 if record_id==27642
-replace onsettxtcod1c=4 if record_id==27642
-drop if record_id==27644 //1 deleted - duplicate registration for record_id=27642
+sort lname fname dod2 record_id
+quietly by lname fname dod2 : gen dupnmdod2 = cond(_N==1,0,_n)
+sort lname fname dod2 record_id
+count if dupnmdod2>0 //22
 
-list record_id pname dod namematch if dupname>0
+drop if record_id==17986 //1 deleted as duplicate of record_id=17987 - also removed from REDCap 2008-2020 db
+drop if record_id==17614 //1 deleted as duplicate of record_id=17613 - also removed from REDCap 2008-2020 db
+drop if record_id==18430 //1 deleted as duplicate of record_id=18431 - also removed from REDCap 2008-2020 db
+drop if record_id==17167 //1 deleted as duplicate of record_id=17166 - also removed from REDCap 2008-2020 db
+drop if record_id==16871 //1 deleted as duplicate of record_id=16872 - also removed from REDCap 2008-2020 db
+drop if record_id==18505 //1 deleted as duplicate of record_id=18504 - also removed from REDCap 2008-2020 db
+drop if record_id==9298 //1 deleted as duplicate of record_id=9299 - also removed from REDCap 2008-2020 db
+drop if record_id==17064 //1 deleted as duplicate of record_id=17065 - also removed from REDCap 2008-2020 db
+drop if record_id==17077 //1 deleted as duplicate of record_id=17078 - also removed from REDCap 2008-2020 db
+drop if record_id==18490 //1 deleted as duplicate of record_id=18489 - also removed from REDCap 2008-2020 db
 
-capture export_excel record_id nrn mstatus durationnum durationtxt pod certifier certifieraddr if record_id==27566 using "`datapath'\version04\2-working\DUPNAMEV01.xlsx", sheet("2018 DCOs_deathdata_20210304") firstrow(variables) replace
-
-preserve
-clear
-import excel using "`datapath'\version04\2-working\DUPNAMEV01.xlsx" , firstrow case(lower)
-replace record_id=27600 if record_id==27566
-rename nrn nrn_dup
-rename mstatus mstatus_dup
-rename durationnum durationnum_dup
-rename durationtxt durationtxt_dup
-rename pod pod_dup
-rename certifier certifier_dup
-rename certifieraddr certifieraddr_dup
-save "`datapath'\version04\2-working\2016-2019_deaths_missing_nrn" ,replace
-restore
-merge 1:1 record_id using "`datapath'\version04\2-working\2016-2019_deaths_missing_nrn" ,force
-/*
-    Result                           # of obs.
-    -----------------------------------------
-    not matched                        10,323
-        from master                    10,323  (_merge==1)
-        from using                          0  (_merge==2)
-
-    matched                                 1  (_merge==3)
-    -----------------------------------------
-*/
-format nrn_dup %15.0g
-replace nrn=nrn_dup if record_id==27600
-replace mstatus_dup="4" if record_id==27600
-destring mstatus_dup ,replace
-replace mstatus=mstatus_dup if record_id==27600
-replace durationnum=durationnum_dup if record_id==27600
-replace durationtxt_dup="4" if record_id==27600
-destring durationtxt_dup ,replace
-replace durationtxt=durationtxt_dup if record_id==27600
-replace pod=pod_dup if record_id==27600
-replace certifier=certifier_dup if record_id==27600
-replace certifieraddr=certifieraddr_dup if record_id==27600
-
-drop *_dup* _merge
-drop if record_id==27566 //1 deleted - duplicate registration for record_id=27600
 sort lname fname record_id
-
-//list record_id pname dod namematch if dupname>0 & namematch!=1
-replace namematch=1 if dupname>0 //444 changes
+quietly by lname fname : gen dupname = cond(_N==1,0,_n)
+sort lname fname record_id
+count if dupname>0 //4,538
+order record_id namematch pname dod nrn fname lname
+drop dod2
 
 ** Check for duplicates by nrn
 preserve
@@ -679,59 +640,53 @@ drop if nrn==.
 sort nrn 
 quietly by nrn : gen dupnrn = cond(_N==1,0,_n)
 sort nrn record_id lname fname
-count if dupnrn>0 //8 - check the electoral list as these NRNs seem to be misassigned
-list record_id namematch fname lname nrn dod sex age if dupnrn>0
+count if dupnrn>0 //63 - check the electoral list as these NRNs seem to be misassigned
+list record_id namematch fname lname dod nrn sex age if dupnrn>0
 //replace namematch=1 if dupnrn>0 // changes - all have different NRNs and pt pnames
+order record_id namematch pname nrn dod fname lname
 restore
+
+drop if record_id==18039 //1 deleted as duplicate of record_id=18038 - also removed from REDCap 2008-2020 db
 
 ** Manually created electoral excel list with corrected NRNs from misassigned NRNs above
 preserve
 clear
-import excel using "`datapath'\version04\2-working\NRNelectoral_20210304.xlsx" , firstrow case(lower)
-save "`datapath'\version04\2-working\2016-2019_deaths_corrected_nrn" ,replace
+import excel using "`datapath'\version08\2-working\NRNelectoral_20210310.xlsx" , firstrow case(lower)
+save "`datapath'\version08\2-working\2008-2019_deaths_corrected_nrn" ,replace
 restore
-merge 1:1 record_id using "`datapath'\version04\2-working\2016-2019_deaths_corrected_nrn" ,force
+
+merge 1:1 record_id using "`datapath'\version08\2-working\2008-2019_deaths_corrected_nrn" ,force
 /*
     Result                           # of obs.
     -----------------------------------------
-    not matched                        10,319
-        from master                    10,319  (_merge==1)
+    not matched                        29,555
+        from master                    29,555  (_merge==1)
         from using                          0  (_merge==2)
 
-    matched                                 4  (_merge==3)
+    matched                                52  (_merge==3)
     -----------------------------------------
 */
 destring elec_nrn ,replace
 format elec_nrn %15.0g
-replace nrn=elec_nrn if record_id==24705|record_id==28561|record_id==25061|record_id==27997 //4 changes
-replace mname=elec_mname if record_id==24705|record_id==28561|record_id==27997 //3 changes
-replace age=33 if record_id==24705
-replace age=88 if record_id==28561
-replace age=83 if record_id==25061
-replace age=40 if record_id==27997
+replace nrn=elec_nrn if elec_nrn!=. //4 changes
+replace mname=elec_mname if elec_mname!="" //3 changes
+replace age=elec_age if elec_age!=.
 drop elec_* _merge
 
+** Update namematch field so that REDCap 2008-2020 db has all the records that already have been checked for duplicates
+list record_id pname if namematch==3 //0
+gen nmflag=1 if dupnmdod2>0 & namematch!=1 //11 changes
+replace nmflag=1 if dupname>0 & namematch!=1 //2458 changes
+replace namematch=1 if dupname>0 & namematch!=1 //2458 changes
+drop dupnmdod2 dupname
+** Update REDCap 2008-2020 db with namematches so do not have to repeat such a lengthy duplicate check in the future
+gen redcap_event_name="death_data_collect_arm_1"
+capture export_excel record_id redcap_event_name namematch if nmflag==1 using "`datapath'\version08\2-working\REDCapUpdateV01.xlsx", firstrow(variables) nolabel replace
+//need to save as excel then manually save as .csv for it to import into REDCap otherwise it gives an error if directly exported as .csv
+drop nmflag
 
-** Check for duplicates by dod (+ name)
-sort lname dod
-quietly by lname dod: gen dupdod = cond(_N==1,0,_n)
-sort lname fname dod record_id
-count if dupdod>0 //299 - diff.pt & namematch already=1
-//list record_id namematch fname lname nrn dod sex age if dupdod>0
-list record_id namematch fname lname nrn dod sex age if dupdod>0 & dupname>0
-//replace namematch=1 if dupdod>0 // changes
-count if dupdod>0 & namematch!=1 //0
-
-** Final check for duplicates by name and dod 
-sort lname fname dod
-quietly by lname fname dod: gen dupnamedod = cond(_N==1,0,_n)
-sort lname fname dod record_id
-count if dupnamedod>0 //2 - diff.pt & namematch already=1
-list record_id namematch fname lname nrn dod sex age if dupnamedod>0
-count if dupnamedod>0 & namematch!=1 //0
-
-count //10,323
-
+count //29,607
+stop
 ** Now generate a new variable which will select out all the potential cancers
 gen cancer=.
 label define cancer_lab 1 "cancer" 2 "not cancer", modify
