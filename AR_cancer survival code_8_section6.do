@@ -29,7 +29,7 @@ log using "logfiles\8_section6.smcl", replace
  * 
  *  	AUTHOR : Angie Rose
  *
- *		LAST UPDATE: 02-jun-2015
+ *		LAST UPDATE: 02-jun-2022
  *
  *    	ANALYSIS: BNR CANCER: 2008 Annual Report 
  *
