@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-MAR-2022
-    // 	date last modified      15-MAR-2022
+    // 	date last modified      16-MAR-2022
     //  algorithm task          Preparing 2019-2021 heart CF datasets
     //  status                  Completed
     //  objective               To have one dataset with heart CF records for 2019-2021 heart
@@ -33,7 +33,7 @@
     capture log close
     log using "`logpath'\CVD-CFSources2022.smcl", replace
 ** HEADER -----------------------------------------------------
-/*
+
 **********
 ** 2019 **
 **********
@@ -139,11 +139,51 @@ tab firstnf ,m
            Total |      1,152      100.00
 */
 
+
+** Retrieval Source - check if this can be useful for this process
+label var retsource " Retrieval Source "
+label define retsource_lab 1 "QEH Ward" 2 "QEH A&E" 3 "QEH Med Rec" 4 "QEH Death Rec" ///
+                          5 "Bay View" 6 "Sparman Clinic" 7 "Psychiatric Hospital" 8 "District Hospital" ///
+						  9 "Geriatric Hospital" 10 "PP (D Corbin)" 11 "PP (S Marquez)" ///
+						  12 "PP (S Moe/Dawn Scantlebury)" 13 "PP (R Ishmael/Jose Ettedgui/Ronald Henry)" ///
+						  14 "PP (R Massay)" 15 "PP (K Goring)" 16 "Polyclinic (Black Rock)" ///
+						  17 "Polyclinic (Edgar Cochrane)" 18 "Polyclinic (Glebe)" /// 
+						  19 "Polyclinic (Maurice Byer)" 20 "Polyclinic (Randal Phillips)" ///
+						  21 "Polyclinic (St. Philip)" 22 "Polyclinic (Warrens)" ///
+						  23 "Polyclinic (Winston Scott)" 24 "Sandy Crest Medical Centre (SCMC)" ///
+						  25 "FMH" 26 "Emergency Clinic" 98 "Other" 99 "ND" , modify 
+label values retsource retsource_lab
+tab retsource ,m
+/*
+                      Retrieval Source  |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                               QEH Ward |         17        1.48        1.48
+                                QEH A&E |        234       20.31       21.79
+                            QEH Med Rec |        711       61.72       83.51
+                          QEH Death Rec |        190       16.49      100.00
+----------------------------------------+-----------------------------------
+                                  Total |      1,152      100.00
+*/
+
 ** Create variable with total number of CF records
 gen cfrec_total=_N
 
-** Save dataset for comparison with other CF heart years
+** Save retrieval source dataset for comparison with other CF heart years
 preserve
+
+contract retsource cfrec_total
+rename _freq retrec_number
+gen retrec_percent=retrec_number/cfrec_total*100
+replace retrec_percent=round(retrec_percent,2.0) if retsource==1
+replace retrec_percent=round(retrec_percent,1.0) if retsource!=1
+gen year=2019
+order year retsource retrec_number cfrec_total retrec_percent
+save "`datapath'\version11\2-working\2019_heart_retsources" ,replace
+
+restore
+
+** Save first notification dataset for comparison with other CF heart years
+//preserve
 
 contract firstnf cfrec_total
 rename _freq cfrec_number
@@ -153,22 +193,40 @@ gen year=2019
 order year firstnf cfrec_number cfrec_total cfrec_percent
 save "`datapath'\version11\2-working\2019_heart_cfsources" ,replace
 
+
+
+append using "`datapath'\version11\2-working\2019_heart_retsources"
+
 ** Add in dataset from 2020 results report dofile with # of cases with full info for comparison
 append using "`datapath'\version11\1-input\mort_heart"
 
 ** Format dataset in prep for comparison with 2020 and 2021 datasets
 gen id=_n
 order id
-drop if mort_heart_ar!=3 & id>2
-keep id year firstnf cfrec_number cfrec_total cfrec_percent mort_heart_ar year_2019 year_2020
+drop if mort_heart_ar!=3 & id>6
+keep id year retsource retrec_number retrec_percent firstnf cfrec_number cfrec_total cfrec_percent mort_heart_ar year_2019 year_2020
 fillmissing mort_heart_ar year_2019 year_2020
 replace year=2020 if year==.
 rename year_2019 absrec_number
 replace absrec_number=year_2020 if year==2020
 drop year_2020
 destring absrec_number ,replace
+stop
 gen absrec_percent=absrec_number/cfrec_total*100 if year==2019
 replace absrec_percent=round(absrec_percent,1.0)
+
+gen cfabsrec_percent=absrec_number/cfrec_number*100 if year==2019 & firstnf!=.
+replace cfabsrec_percent=round(cfabsrec_percent,1.0)
+
+gen retabsrec_percent=absrec_number/retrec_number*100 if year==2019 & retsource!=.
+replace retabsrec_percent=round(retabsrec_percent,1.0)
+
+label var cfrec_percent "Proportion CF Source to CF Source Total"
+label var absrec_percent "Proportion Db ABS to CF Source Total"
+label var cfabsrec_percent "Proportion Db ABS to CF Source"
+label var retrec_percent "Proportion Retrieval Source to CF Source Total"
+label var cfabsrec_percent "Proportion Db ABS to Retrieval Source"
+
 save "`datapath'\version11\2-working\2019_heart_cfsources+abs" ,replace
 
 restore
