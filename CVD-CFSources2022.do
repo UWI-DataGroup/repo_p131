@@ -211,7 +211,7 @@ rename year_2019 absrec_number
 replace absrec_number=year_2020 if year==2020
 drop year_2020
 destring absrec_number ,replace
-stop
+stop - used REDCap reports instead (see BNRCVD_CORE db: Sources 2020 (HEART) and Sources 2021(HEART))
 gen absrec_percent=absrec_number/cfrec_total*100 if year==2019
 replace absrec_percent=round(absrec_percent,1.0)
 
