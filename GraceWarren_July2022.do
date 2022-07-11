@@ -35,7 +35,7 @@
 ** HEADER -----------------------------------------------------
 
 ** Load the dataset
-use "`datapath'\version12\1-input\2016-2018_prepped cancer" ,clear
+use "`datapath'\version12\2-working\2016-2018_prepped cancer" ,clear
 count //6862
 
 ** Remove duplicates and ineligibles
