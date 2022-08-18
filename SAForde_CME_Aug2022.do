@@ -178,6 +178,7 @@ putdocx save "`datapath'\version15\3-output\Cancer_2008_2013-2018_CMEStats_`list
 putdocx clear
 restore
 
+
 ** SF requested by email 16aug2022: length of time between Dx and Death for 2015 and 2018
 //	Mean and median duration in months from date of incident diagnosis to date of abstraction
 ** First calculate the difference in months between these 2 dates 
@@ -957,3 +958,50 @@ local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version15\3-output\Cancer_2008_2013-2018_CMEStats_`listdate'.docx" ,append
 putdocx clear
 restore
+
+
+** SF requested via Zoom meeting on 18aug2022: table with dxyr and basis
+** For ease, I copied and pasted the below results into the Word doc:
+
+** LOAD 2008, 2013-2018 cleaned cancer incidence dataset from p117/version15/20d_final clean.do
+use "`datapath'\version15\1-input\2008_2013-2018_cancer_reportable_nonsurvival_deidentified" ,clear
+
+count //6682
+
+tab basis dxyr
+/*
+                      |                                Diagnosis Year
+   Basis Of Diagnosis |      2008       2013       2014       2015       2016       2017       2018 |     Total
+----------------------+-----------------------------------------------------------------------------+----------
+                  DCO |        52         59         41        101         82         79         55 |       469 
+        Clinical only |        16         21         38         67        101         83         43 |       369 
+Clinical Invest./Ult  |        45         60         36         62         55         58         43 |       359 
+Lab test (biochem/imm |         7          5         10         14         31         13         17 |        97 
+        Cytology/Haem |        31         31         45         28         23         19         27 |       204 
+Hx of mets/Autopsy wi |        24         16         13         19         13         24         21 |       130 
+Hx of primary/Autopsy |       635        646        638        754        729        683        752 |     4,837 
+              Unknown |         5         46         63         47         36         18          2 |       217 
+----------------------+-----------------------------------------------------------------------------+----------
+                Total |       815        884        884      1,092      1,070        977        960 |     6,682
+*/
+table basis dxyr
+/*
+-------------------------------------------------------------------------------------------------------------------------------
+                                                                    |                       Diagnosis Year                     
+                                                                    |  2008   2013   2014    2015    2016   2017   2018   Total
+--------------------------------------------------------------------+----------------------------------------------------------
+Basis Of Diagnosis                                                  |                                                          
+  DCO                                                               |    52     59     41     101      82     79     55     469
+  Clinical only                                                     |    16     21     38      67     101     83     43     369
+  Clinical Invest./Ult Sound/Exploratory Surgery/Autopsy without hx |    45     60     36      62      55     58     43     359
+  Lab test (biochem/immuno.)                                        |     7      5     10      14      31     13     17      97
+  Cytology/Haem                                                     |    31     31     45      28      23     19     27     204
+  Hx of mets/Autopsy with Hx of mets                                |    24     16     13      19      13     24     21     130
+  Hx of primary/Autopsy with Hx of primary                          |   635    646    638     754     729    683    752   4,837
+  Unknown                                                           |     5     46     63      47      36     18      2     217
+  Total                                                             |   815    884    884   1,092   1,070    977    960   6,682
+-------------------------------------------------------------------------------------------------------------------------------
+*/
+
+contract basis dxyr
+rename _freq number
