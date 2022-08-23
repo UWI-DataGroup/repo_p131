@@ -37,7 +37,50 @@ cls
     capture log close
     log using "`logpath'/AGrandison_CME_Aug2022.smcl", replace
 ** HEADER -----------------------------------------------------
- 
+
+****************
+**	  2020    **
+** ALL Deaths **
+****************
+** LOAD 2020 cleaned and formatted death dataset from p117/version09/5c_prep mort_2019+2020.do
+use "`datapath'\version16\1-input\2020_prep mort_ALL_deidentified" ,clear
+
+count //2602
+
+** JC 23aug2022: For BNR CME 2022 webinar, Dr Adanna Grandison needs the number of covid deaths and number of covid deaths with cancer for 2020 and 2021 by patient
+order record_id coddeath placeofdeath
+
+count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|regexm(coddeath,"CORONA") //95
+
+count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))) //4
+
+count if regexm(coddeath,"VACCINE") & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //0
+
+** All 2020 deaths with COVID-related COD
+count if !(strmatch(strupper(coddeath), "*VACCINE*")) & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //4
+
+** Cases where POD=isolation facility but COD!=COVID
+count if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*")) & !(strmatch(strupper(placeofdeath), "*HARRISONS ROAD*")) & !(strmatch(strupper(placeofdeath), "*BLACKMAN NORTH*"))
+//0
+
+egen covid = count(record_id) if !(strmatch(strupper(coddeath), "*VACCINE*")) & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))))
+
+egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))))
+
+egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*")) & !(strmatch(strupper(placeofdeath), "*HARRISONS ROAD*")) & !(strmatch(strupper(placeofdeath), "*BLACKMAN NORTH*"))
+
+fillmissing covid vaccine isolation
+
+preserve
+collapse dodyear covid vaccine isolation
+save "`datapath'\version16\2-working\covid_totals" ,replace
+restore
+
+
+****************
+**	  2021    **
+** ALL Deaths **
+****************
 ** LOAD 2021 cleaned and formatted death dataset from p117/version09/5e_prep mort_2021.do
 use "`datapath'\version16\1-input\2021_prep mort_ALL_deidentified" ,clear
 
@@ -72,27 +115,35 @@ egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(pla
 
 fillmissing covid vaccine isolation
 
-preserve
+
 collapse dodyear covid vaccine isolation
+append using "`datapath'\version16\2-working\covid_totals"
+replace vaccine=0 if vaccine==.
+replace isolation=0 if isolation==.
+sort dodyear
 save "`datapath'\version16\2-working\covid_totals" ,replace
-restore
 
+
+*******************
+**	    2020	 **
+** Cancer Deaths **
+*******************
 ** LOAD 2020 cleaned and formatted death dataset from p117/version09/5c_prep mort_2019+2020.do
-use "`datapath'\version16\1-input\2020_prep mort_ALL_deidentified" ,clear
+use "`datapath'\version16\1-input\2020_prep mort_cancer_deidentified" ,clear
 
-count //2602
+count //653
 
 ** JC 23aug2022: For BNR CME 2022 webinar, Dr Adanna Grandison needs the number of covid deaths and number of covid deaths with cancer for 2020 and 2021 by patient
 order record_id coddeath placeofdeath
 
-count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|regexm(coddeath,"CORONA") //95
+count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|regexm(coddeath,"CORONA") //1
 
-count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))) //4
+count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))) //0
 
 count if regexm(coddeath,"VACCINE") & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //0
 
 ** All 2020 deaths with COVID-related COD
-count if !(strmatch(strupper(coddeath), "*VACCINE*")) & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //4
+count if !(strmatch(strupper(coddeath), "*VACCINE*")) & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //0
 
 ** Cases where POD=isolation facility but COD!=COVID
 count if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*")) & !(strmatch(strupper(placeofdeath), "*HARRISONS ROAD*")) & !(strmatch(strupper(placeofdeath), "*BLACKMAN NORTH*"))
@@ -106,13 +157,60 @@ egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(pla
 
 fillmissing covid vaccine isolation
 
+preserve
 collapse dodyear covid vaccine isolation
-append using "`datapath'\version16\2-working\covid_totals"
+save "`datapath'\version16\2-working\covid_totals_cancer" ,replace
+restore
+
+*******************
+**	    2021	 **
+** Cancer Deaths **
+*******************
+** LOAD 2021 cleaned and formatted death dataset from p117/version09/5e_prep mort_2021.do
+use "`datapath'\version16\1-input\2021_prep mort_cancer_deidentified" ,clear
+
+count //693
+
+** JC 23aug2022: For BNR CME 2022 webinar, Dr Adanna Grandison needs the number of covid deaths and number of covid deaths with cancer for 2020 and 2021 by patient
+order record_id coddeath placeofdeath
+
+count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|regexm(coddeath,"CORONA") //18
+
+count if regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))) //18
+
+count if record_id!=36048 & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //18
+//record_id 36048 COD states non related covid pneumonia
+
+count if regexm(coddeath,"VACCINE") & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //0
+
+** All 2021 deaths with COVID-related COD
+count if record_id!=36048 & !(strmatch(strupper(coddeath), "*VACCINE*")) & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*")))) //18
+//record_id 36048 COD states non related covid pneumonia
+//4 with COVID vaccine related deaths but no indication they contracted COVID
+
+** Cases where POD=isolation facility but COD!=COVID
+count if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*"))
+//1
+
+egen covid = count(record_id) if record_id!=36048 & !(strmatch(strupper(coddeath), "*VACCINE*")) & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))))
+
+egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath,"COV")|regexm(coddeath,"SARS")|(regexm(coddeath,"CORONA") & !(strmatch(strupper(coddeath), "*CORONARY*"))))
+
+egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*"))
+
+fillmissing covid vaccine isolation
+
+
+collapse dodyear covid vaccine isolation
+append using "`datapath'\version16\2-working\covid_totals_cancer"
+replace covid=0 if covid==.
 replace vaccine=0 if vaccine==.
 replace isolation=0 if isolation==.
 sort dodyear
-save "`datapath'\version16\2-working\covid_totals" ,replace
+save "`datapath'\version16\2-working\covid_totals_cancer" ,replace
 
+preserve
+use "`datapath'\version16\2-working\covid_totals" ,clear
 ** Create MS Word results table with absolute case totals by year
 				**************************
 				*	   MS WORD REPORT    *
@@ -173,3 +271,30 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version16\3-output\COVID_CMEStats_`listdate'.docx", replace
 putdocx clear
+restore
+
+preserve
+use "`datapath'\version16\2-working\covid_totals_cancer" ,clear
+
+putdocx clear
+putdocx begin
+
+putdocx paragraph, halign(center)
+putdocx text ("Table: Cancer Deaths with COVID-related COD (2020 + 2021)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+rename dodyear Year
+rename covid Covid_deaths
+rename vaccine Covid_vaccine_deaths
+rename isolation Facility_deaths_no_covid
+
+putdocx table tbl1 = data(Year Covid_deaths Covid_vaccine_deaths Facility_deaths_no_covid), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version16\3-output\COVID_CMEStats_`listdate'.docx", append
+putdocx clear
+restore
