@@ -6,7 +6,7 @@ cls
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      18-AUG-2022
-    // 	date last modified      18-AUG-2022
+    // 	date last modified      23-AUG-2022
     //  algorithm task          Providing death-related statistics to Shelly-Ann Forde for the BNR CME seminar
     //  status                  Completed
     //  objective               To have one document with cleaned and grouped 2008,2013-2018 data for inclusion in CME presentation.
@@ -959,6 +959,83 @@ putdocx save "`datapath'\version15\3-output\Cancer_2008_2013-2018_CMEStats_`list
 putdocx clear
 restore
 
+				*******************************
+				*	     MS WORD REPORT       *
+				*   ANNUAL REPORT STATISTICS  *
+                *   Resident Status by DxYr   *
+				*******************************
+
+** SF requested via WhatsApp on 23aug2022: table with dxyr and resident status as wants to see those that are nonreportable due to resident status
+preserve
+use "X:/The University of the West Indies/DataGroup - repo_data/data_p117\version09\3-output\2008_2013-2018_nonsurvival_nonreportable" ,clear
+
+table resident dxyr if resident!=1
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("Resident Status"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("Resident Status (Dofile: 20d_final clean.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Resident Status, 2008-2018."), bold font(Helvetica,10,"blue")
+putdocx paragraph
+putdocx text ("Below table uses the variables [resident] and [dxyr] to display results for patients only (i.e. MPs excluded).")
+
+putdocx paragraph, halign(center)
+putdocx text ("2008,2013-2018"), bold font(Helvetica,10,"blue")
+tab2docx resident if dxyr>2007 & patient==1
+
+putdocx paragraph, halign(center)
+putdocx text ("Non-Residents by Diagnosis Year, 2008-2018."), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx image "`datapath'\version15\2-working\ResidentStatusByYear.png", width(14.98) height(4.36)
+putdocx paragraph
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version15\3-output\Cancer_2008_2013-2018_CMEStats_`listdate'.docx" ,append
+putdocx clear
+restore
+
+				*******************************
+				*	     MS WORD REPORT       *
+				*   ANNUAL REPORT STATISTICS  *
+                *  Basis of Diagnosis by DxYr *
+				*******************************
+
+** SF requested via Zoom meeting on 18aug2022: table with dxyr and basis
+preserve
+use "`datapath'\version15\1-input\2008_2013-2018_cancer_reportable_nonsurvival_deidentified" ,clear
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("Most Valid Basis Of Diagnosis"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("Basis Of Diagnosis (Dofile: 25a_analysis numbers.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Basis Of Diagnosis, 2008-2018."), bold font(Helvetica,10,"blue")
+putdocx paragraph
+putdocx text ("Below table uses the variables [basis] and [dxyr] to display results for patients by tumour (i.e. MPs not excluded).")
+
+putdocx paragraph, halign(center)
+putdocx text ("2008,2013-2018"), bold font(Helvetica,10,"blue")
+tab2docx basis if dxyr>2007
+
+putdocx paragraph, halign(center)
+putdocx text ("Basis Of Diagnosis by Diagnosis Year, 2008-2018."), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx image "`datapath'\version15\2-working\BODbyYear.png", width(17.94) height(5.08)
+putdocx paragraph
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version15\3-output\Cancer_2008_2013-2018_CMEStats_`listdate'.docx" ,append
+putdocx clear
+restore
 
 ** SF requested via Zoom meeting on 18aug2022: table with dxyr and basis
 ** For ease, I copied and pasted the below results into the Word doc:
@@ -1003,5 +1080,21 @@ Basis Of Diagnosis                                                  |
 -------------------------------------------------------------------------------------------------------------------------------
 */
 
+
 contract basis dxyr
 rename _freq number
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, halign(center)
+
+putdocx table tbl1 = data(dxyr basis number), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version15\3-output\Cancer_2008_2013-2018_CMEStats_`listdate'.docx" ,append
+putdocx clear
