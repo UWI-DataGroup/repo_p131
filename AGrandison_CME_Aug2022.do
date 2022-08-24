@@ -159,7 +159,7 @@ egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath
 
 egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*")) & !(strmatch(strupper(placeofdeath), "*HARRISONS ROAD*")) & !(strmatch(strupper(placeofdeath), "*BLACKMAN NORTH*"))
 
-gen total_cancer_deaths=_N
+gen total_cancer_deaths=_N //variable with total amount of cancer deaths
 
 fillmissing covid vaccine isolation total_cancer_deaths
 
@@ -167,6 +167,7 @@ preserve
 collapse dodyear covid vaccine isolation total_cancer_deaths
 save "`datapath'\version16\2-working\covid_totals_cancer" ,replace
 restore
+
 
 *******************
 **	    2021	 **
@@ -204,7 +205,17 @@ egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath
 
 egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*"))
 
-gen total_cancer_deaths=_N
+gen total_cancer_deaths=_N //variable with total amount of cancer deaths
+
+preserve
+drop if covid==.
+keep dodyear siteiarc
+contract dodyear siteiarc
+drop _freq
+sort siteiarc
+count //12
+save "`datapath'\version16\2-working\covid_cancer_sites" ,replace
+restore
 
 fillmissing covid vaccine isolation total_cancer_deaths
 
@@ -304,6 +315,28 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version16\3-output\COVID_CMEStats_`listdate'.docx", append
+putdocx clear
+restore
+
+preserve
+use "`datapath'\version16\2-working\covid_cancer_sites" ,clear
+
+putdocx clear
+putdocx begin
+
+putdocx paragraph, halign(center)
+putdocx text ("Table: SITES of Cancer Deaths with COVID-related COD (2020 + 2021)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+rename dodyear Year
+rename siteiarc Site
+
+putdocx table tbl1 = data(Year Site), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version16\3-output\COVID_CMEStats_`listdate'.docx", append
