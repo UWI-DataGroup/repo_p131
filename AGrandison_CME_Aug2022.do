@@ -6,7 +6,7 @@ cls
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      23-AUG-2022
-    // 	date last modified      23-AUG-2022
+    // 	date last modified      24-AUG-2022
     //  algorithm task          Providing COVID death-related statistics to Adanna Grandison for the BNR CME seminar
     //  status                  Completed
     //  objective               To have one document with cleaned and grouped data for inclusion in CME presentation:
@@ -69,10 +69,12 @@ egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath
 
 egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*")) & !(strmatch(strupper(placeofdeath), "*HARRISONS ROAD*")) & !(strmatch(strupper(placeofdeath), "*BLACKMAN NORTH*"))
 
-fillmissing covid vaccine isolation
+gen total_deaths=_N
+
+fillmissing covid vaccine isolation total_deaths
 
 preserve
-collapse dodyear covid vaccine isolation
+collapse dodyear covid vaccine isolation total_deaths
 save "`datapath'\version16\2-working\covid_totals" ,replace
 restore
 
@@ -113,10 +115,12 @@ egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath
 
 egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*"))
 
-fillmissing covid vaccine isolation
+gen total_deaths=_N
+
+fillmissing covid vaccine isolation total_deaths
 
 
-collapse dodyear covid vaccine isolation
+collapse dodyear covid vaccine isolation total_deaths
 append using "`datapath'\version16\2-working\covid_totals"
 replace vaccine=0 if vaccine==.
 replace isolation=0 if isolation==.
@@ -155,10 +159,12 @@ egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath
 
 egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*")) & !(strmatch(strupper(placeofdeath), "*HARRISONS ROAD*")) & !(strmatch(strupper(placeofdeath), "*BLACKMAN NORTH*"))
 
-fillmissing covid vaccine isolation
+gen total_cancer_deaths=_N
+
+fillmissing covid vaccine isolation total_cancer_deaths
 
 preserve
-collapse dodyear covid vaccine isolation
+collapse dodyear covid vaccine isolation total_cancer_deaths
 save "`datapath'\version16\2-working\covid_totals_cancer" ,replace
 restore
 
@@ -198,10 +204,11 @@ egen vaccine = count(record_id) if regexm(coddeath,"VACCINE") & (regexm(coddeath
 
 egen isolation = count(record_id) if (regexm(placeofdeath,"HARRISON")|regexm(placeofdeath,"BLACKMAN")|regexm(placeofdeath,"ISOLATION")) & !(strmatch(strupper(coddeath), "*COVID*")) & !(strmatch(strupper(coddeath), "*CORONA*")) & !(strmatch(strupper(placeofdeath), "*ISOLATION ROAD*")) & !(strmatch(strupper(coddeath), "*COVI9*"))
 
-fillmissing covid vaccine isolation
+gen total_cancer_deaths=_N
 
+fillmissing covid vaccine isolation total_cancer_deaths
 
-collapse dodyear covid vaccine isolation
+collapse dodyear covid vaccine isolation total_cancer_deaths
 append using "`datapath'\version16\2-working\covid_totals_cancer"
 replace covid=0 if covid==.
 replace vaccine=0 if vaccine==.
@@ -261,12 +268,14 @@ rename dodyear Year
 rename covid Covid_deaths
 rename vaccine Covid_vaccine_deaths
 rename isolation Facility_deaths_no_covid
+rename total_deaths Total_deaths
 
-putdocx table tbl1 = data(Year Covid_deaths Covid_vaccine_deaths Facility_deaths_no_covid), halign(center) varnames
+putdocx table tbl1 = data(Year Covid_deaths Covid_vaccine_deaths Facility_deaths_no_covid Total_deaths), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version16\3-output\COVID_CMEStats_`listdate'.docx", replace
@@ -287,12 +296,14 @@ rename dodyear Year
 rename covid Covid_deaths
 rename vaccine Covid_vaccine_deaths
 rename isolation Facility_deaths_no_covid
+rename total_cancer_deaths Total_cancer_deaths
 
-putdocx table tbl1 = data(Year Covid_deaths Covid_vaccine_deaths Facility_deaths_no_covid), halign(center) varnames
+putdocx table tbl1 = data(Year Covid_deaths Covid_vaccine_deaths Facility_deaths_no_covid Total_cancer_deaths), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version16\3-output\COVID_CMEStats_`listdate'.docx", append
