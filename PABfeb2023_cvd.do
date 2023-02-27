@@ -58,3 +58,8 @@ bysort event_month :tab sd_casetype if sex==2 & sd_etype==2 //M heart
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 asdoc bysort event_month :tab sex if sd_etype==1, save(X:/The University of the West Indies/DataGroup - repo_data/data_p131/version18/3-output/Counts_bymonth+sex_STROKE_`listdate', replace
 asdoc bysort event_month :tab sex if sd_etype==2, save(X:/The University of the West Indies/DataGroup - repo_data/data_p131/version18/3-output/Counts_bymonth+sex_HEART_`listdate', replace
+
+
+tab sex if sd_etype==1 //stroke
+tab sex if sd_etype==2 //heart
+//the above totals were added manually to the documents generated above
