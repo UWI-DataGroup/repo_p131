@@ -28,13 +28,13 @@
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p131"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p117"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p131
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p117
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\population_criccs.smcl", replace
+    log using "`logpath'\0_population.smcl", replace
 ** HEADER -----------------------------------------------------
 
 ** (1) Barbados population figures (Census 2010)
@@ -42,7 +42,7 @@
 ** April 2007
 
 ** Load the dataset: note first we use 2000 census data then change to 2010
-use "`datapath'\version20\1-input\barbados_adjusted_population_2000", clear
+use "`datapath'\version02\1-input\barbados_adjusted_population_2000", clear
 
 ** rename variable atotal to pop_bb
 rename atotal pop_bb
@@ -189,34 +189,34 @@ label data "Barbados census 2010: 5-year age bands"
 
 
 ** Save the dataset
-save "`datapath'\version20\2-working\bb2010_5" , replace
+save "`datapath'\version02\2-working\bb2010_5" , replace
 
 preserve
 collapse (sum) pop_bb, by(age10 age60 sex)
 label data "Barbados census 2010: 10-year age bands1"
 ** Save the dataset
-save "`datapath'\version20\2-working\bb2010_10-1" , replace
+save "`datapath'\version02\2-working\bb2010_10-1" , replace
 
 collapse (sum) pop_bb, by(age60 sex)	
 	label data "Barbados census 2010: 2 age groups. <60 and 60 & over"
-save "`datapath'\version20\2-working\bb2010_60" , replace
+save "`datapath'\version02\2-working\bb2010_60" , replace
 restore
 
 collapse (sum) pop_bb, by(age_10 age45 age55 age65 sex)
 	label data "Barbados census 2010: 10-year age bands2"
-save "`datapath'\version20\2-working\bb2010_10-2" , replace
+save "`datapath'\version02\2-working\bb2010_10-2" , replace
 
 collapse (sum) pop_bb, by(age45 age55 age65 sex)
 	label data "Barbados census 2010: 2 age groups. <45 and 45 & over"
-save "`datapath'\version20\2-working\bb2010_45" , replace
+save "`datapath'\version02\2-working\bb2010_45" , replace
 
 collapse (sum) pop_bb, by(age55 age65 sex)
 	label data "Barbados census 2010: 2 age groups. <55 and 55 & over"
-save "`datapath'\version20\2-working\bb2010_55" , replace
+save "`datapath'\version02\2-working\bb2010_55" , replace
 
 collapse (sum) pop_bb, by(age65 sex)	
 	label data "Barbados census 2010: 2 age groups. <65 and 65 & over"
-save "`datapath'\version20\2-working\bb2010_65" , replace
+save "`datapath'\version02\2-working\bb2010_65" , replace
 
 
 **********************************
@@ -317,24 +317,24 @@ label values age65 age65
 sort age5
 label data "WHO world standard million: 5-year age bands"
 
-save "`datapath'\version20\2-working\who2000_5", replace
+save "`datapath'\version02\2-working\who2000_5", replace
 
 preserve
 collapse (sum) pop , by(age10 age60 intdn)
 	label data "WHO world standard million: 10-year age bands1"
 	sort age10
-save "`datapath'\version20\2-working\who2000_10-1", replace
+save "`datapath'\version02\2-working\who2000_10-1", replace
 
 collapse (sum) pop , by(age60 intdn)
 	label data "WHO world standard million: 2 age groups. <60 and 60+"
 	sort age60
-save "`datapath'\version20\2-working\who2000_60", replace
+save "`datapath'\version02\2-working\who2000_60", replace
 restore
 
 collapse (sum) pop , by(age_10 age45 age55 age65 intdn)
 	label data "WHO world standard million: 10-year age bands2"
 	sort age_10
-save "`datapath'\version20\2-working\who2000_10-2", replace
+save "`datapath'\version02\2-working\who2000_10-2", replace
 
 ** JC: created the below pop dataset to be used in 4_section3.do
 ** as it was missing here
@@ -349,19 +349,19 @@ save "data\population\who2000_10-2_PC", replace
 collapse (sum) pop , by(age45 age55 age65 intdn)
 	label data "WHO world standard million: 2 age groups. <45 and 45 & over"
 	sort age45
-save "`datapath'\version20\2-working\who2000_45", replace
+save "`datapath'\version02\2-working\who2000_45", replace
 
 collapse (sum) pop , by(age55 age65 intdn)
 	label data "WHO world standard million: 2 age groups. <55 and 55 & over"
 	sort age55
-save "`datapath'\version20\2-working\who2000_55", replace
+save "`datapath'\version02\2-working\who2000_55", replace
 
 preserve
 collapse (sum) pop , by(age65 intdn)
 	drop if age65==2
 	label data "WHO world standard million: 1 age group. <65"
 	sort age65
-save "`datapath'\version20\2-working\who2000_64", replace
+save "`datapath'\version02\2-working\who2000_64", replace
 restore
 
 preserve
@@ -369,7 +369,7 @@ collapse (sum) pop , by(age65 intdn)
 	drop if age65==1
 	label data "WHO world standard million: 1 age group. 65 & over"
 	sort age65
-save "`datapath'\version20\2-working\who2000_65", replace
+save "`datapath'\version02\2-working\who2000_65", replace
 restore
 
 
@@ -457,34 +457,34 @@ label values age60 age60
 sort age5
 label data "US standard population: 5-year age bands"
 
-save "`datapath'\version20\2-working\us2000_5", replace
+save "`datapath'\version02\2-working\us2000_5", replace
 
 preserve
 collapse (sum) pop , by(age10 age60 intdn)
 	label data "US standard population: 10-year age bands1"
 	sort age10
-save "`datapath'\version20\2-working\us2000_10-1", replace
+save "`datapath'\version02\2-working\us2000_10-1", replace
 
 collapse (sum) pop , by(age60 intdn)
 	label data "US standard population: 2 age groups. <60 and 60+"
 	sort age60
-save "`datapath'\version20\2-working\us2000_60", replace
+save "`datapath'\version02\2-working\us2000_60", replace
 restore
 
 collapse (sum) pop , by(age_10 age45 age55 intdn)
 	label data "US standard population: 10-year age bands2"
 	sort age_10
-save "`datapath'\version20\2-working\us2000_10-2", replace
+save "`datapath'\version02\2-working\us2000_10-2", replace
 
 collapse (sum) pop , by(age45 age55 intdn)
 	label data "US standard population: 2 age groups. <45 and 45 & over"
 	sort age45
-save "`datapath'\version20\2-working\us2000_45", replace
+save "`datapath'\version02\2-working\us2000_45", replace
 
 collapse (sum) pop , by(age55 intdn)
 	label data "US standard population: 2 age groups. <55 and 55 & over"
 	sort age55
-save "`datapath'\version20\2-working\us2000_55", replace
+save "`datapath'\version02\2-working\us2000_55", replace
 
 
 
@@ -577,41 +577,41 @@ label values age65 age65
 sort age5
 label data "Segi's WHO world standard million: 5-year age bands"
 
-save "`datapath'\version20\2-working\whosegi2000_5", replace
+save "`datapath'\version02\2-working\whosegi2000_5", replace
 
 preserve
 collapse (sum) pop_segi , by(age10 age60 intdn)
 	label data "Segi's WHO world standard million: 10-year age bands1"
 	sort age10
-save "`datapath'\version20\2-working\whosegi2000_10-1", replace
+save "`datapath'\version02\2-working\whosegi2000_10-1", replace
 
 collapse (sum) pop_segi , by(age60 intdn)
 	label data "Segi's WHO world standard million: 2 age groups. <60 and 60+"
 	sort age60
-save "`datapath'\version20\2-working\whosegi2000_60", replace
+save "`datapath'\version02\2-working\whosegi2000_60", replace
 restore
 
 collapse (sum) pop_segi , by(age_10 age45 age55 age65 intdn)
 	label data "Segi's WHO world standard million: 10-year age bands2"
 	sort age_10
-save "`datapath'\version20\2-working\whosegi2000_10-2", replace
+save "`datapath'\version02\2-working\whosegi2000_10-2", replace
 
 collapse (sum) pop_segi , by(age45 age55 age65 intdn)
 	label data "Segi's WHO world standard million: 2 age groups. <45 and 45 & over"
 	sort age45
-save "`datapath'\version20\2-working\whosegi2000_45", replace
+save "`datapath'\version02\2-working\whosegi2000_45", replace
 
 collapse (sum) pop_segi , by(age55 age65 intdn)
 	label data "Segi's WHO world standard million: 2 age groups. <55 and 55 & over"
 	sort age55
-save "`datapath'\version20\2-working\whosegi2000_55", replace
+save "`datapath'\version02\2-working\whosegi2000_55", replace
 
 preserve
 collapse (sum) pop_segi , by(age65 intdn)
 	drop if age65==2
 	label data "Segi's WHO world standard million: 1 age group. <65"
 	sort age65
-save "`datapath'\version20\2-working\whosegi2000_64", replace
+save "`datapath'\version02\2-working\whosegi2000_64", replace
 restore
 
 preserve
@@ -619,7 +619,7 @@ collapse (sum) pop_segi , by(age65 intdn)
 	drop if age65==1
 	label data "Segi's WHO world standard million: 1 age group. 65 & over"
 	sort age65
-save "`datapath'\version20\2-working\whosegi2000_65", replace
+save "`datapath'\version02\2-working\whosegi2000_65", replace
 restore
 
 clear
@@ -634,28 +634,28 @@ clear
 ** DATA IMPORT  
 ***************
 ** LOAD the BSS 2010-2018 excel dataset, multiple sheets at once
-import excel using "`datapath'\version20\1-input\BSS.xlsx" , describe
+import excel using "`datapath'\version02\1-input\BSS.xlsx" , describe
 forvalues i=7(-1)1 {  
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
-import excel using "`datapath'\version20\1-input\BSS.xlsx", ///
+import excel using "`datapath'\version02\1-input\BSS.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D38) clear
 if `i'==7 {
-    save "`datapath'\version20\2-working\pop_bss", replace
+    save "`datapath'\version02\2-working\pop_bss", replace
   }
   else {
-    append using "`datapath'\version20\2-working\pop_bss.dta"
-    save "`datapath'\version20\2-working\pop_bss", replace
+    append using "`datapath'\version02\2-working\pop_bss.dta"
+    save "`datapath'\version02\2-working\pop_bss", replace
   }
   
 }
@@ -699,7 +699,7 @@ drop if year!=2008
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2013: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2008-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2008-5" , replace
 note: TS This dataset prepared using 2000-2009 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -708,7 +708,7 @@ drop if year!=2008
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2013: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2008-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2008-10" , replace
 note: TS This dataset prepared using 2000-2009 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -717,7 +717,7 @@ drop if year!=2013
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2013: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2013-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2013-5" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -726,7 +726,7 @@ drop if year!=2013
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2013: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2013-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2013-10" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -735,7 +735,7 @@ drop if year!=2014
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2014: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2014-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2014-5" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -744,7 +744,7 @@ drop if year!=2014
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2014: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2014-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2014-10" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -753,7 +753,7 @@ drop if year!=2015
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2015: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2015-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2015-5" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -762,7 +762,7 @@ drop if year!=2015
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2015: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2015-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2015-10" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -771,7 +771,7 @@ drop if year!=2016
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2016: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2016-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2016-5" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -780,7 +780,7 @@ drop if year!=2016
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2016: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2016-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2016-10" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -789,7 +789,7 @@ drop if year!=2017
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2017: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2017-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2017-5" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -798,7 +798,7 @@ drop if year!=2017
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2017: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2017-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2017-10" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -807,7 +807,7 @@ drop if year!=2018
 drop year age_10
 collapse (sum) pop_bss, by(age5 sex)
 label data "BSS Population data 2018: 5-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2018-5" , replace
+save "`datapath'\version02\2-working\pop_bss_2018-5" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -816,7 +816,7 @@ drop if year!=2018
 drop year age5
 collapse (sum) pop_bss, by(age_10 sex)
 label data "BSS Population data 2018: 10-year age bands"
-save "`datapath'\version20\2-working\pop_bss_2018-10" , replace
+save "`datapath'\version02\2-working\pop_bss_2018-10" , replace
 note: TS This dataset prepared using 2010-2018 census & estimate populations emailed from BSS' Socio-and-Demographic Statistics Division by Statistical Assistant on 29-Nov-2019.
 restore
 
@@ -832,26 +832,26 @@ clear
 ** DATA IMPORT  
 ***************
 ** LOAD the 2019 WPP 2008,2013-2018 excel dataset, multiple sheets at once
-import excel using "`datapath'\version20\1-input\wpp.xlsx" , describe
+import excel using "`datapath'\version02\1-input\wpp.xlsx" , describe
 forvalues i=7(-1)1 {  
-import excel using "`datapath'\version20\1-input\wpp.xlsx", ///
+import excel using "`datapath'\version02\1-input\wpp.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D37) clear
-import excel using "`datapath'\version20\1-input\wpp.xlsx", ///
+import excel using "`datapath'\version02\1-input\wpp.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D37) clear
-import excel using "`datapath'\version20\1-input\wpp.xlsx", ///
+import excel using "`datapath'\version02\1-input\wpp.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D37) clear
-import excel using "`datapath'\version20\1-input\wpp.xlsx", ///
+import excel using "`datapath'\version02\1-input\wpp.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D37) clear
-import excel using "`datapath'\version20\1-input\wpp.xlsx", ///
+import excel using "`datapath'\version02\1-input\wpp.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D37) clear
-import excel using "`datapath'\version20\1-input\wpp.xlsx", ///
+import excel using "`datapath'\version02\1-input\wpp.xlsx", ///
          sheet(Sheet`i') cellrange(A2:D37) clear
 if `i'==7 {
-    save "`datapath'\version20\2-working\pop_wpp", replace
+    save "`datapath'\version02\2-working\pop_wpp", replace
   }
   else {
-    append using "`datapath'\version20\2-working\pop_wpp.dta"
-    save "`datapath'\version20\2-working\pop_wpp", replace
+    append using "`datapath'\version02\2-working\pop_wpp.dta"
+    save "`datapath'\version02\2-working\pop_wpp", replace
   }
   
 }
@@ -890,7 +890,7 @@ drop if year!=2008
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2008: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2008-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2008-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -899,7 +899,7 @@ drop if year!=2008
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2008: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2008-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2008-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -908,7 +908,7 @@ drop if year!=2013
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2013: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2013-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2013-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -917,7 +917,7 @@ drop if year!=2013
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2013: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2013-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2013-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -926,7 +926,7 @@ drop if year!=2014
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2014: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2014-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2014-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -935,7 +935,7 @@ drop if year!=2014
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2014: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2014-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2014-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -944,7 +944,7 @@ drop if year!=2015
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2015: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2015-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2015-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -953,7 +953,7 @@ drop if year!=2015
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2015: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2015-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2015-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -962,7 +962,7 @@ drop if year!=2016
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2016: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2016-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2016-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -971,7 +971,7 @@ drop if year!=2016
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2016: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2016-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2016-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -980,7 +980,7 @@ drop if year!=2017
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2017: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2017-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2017-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -989,7 +989,7 @@ drop if year!=2017
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2017: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2017-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2017-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -998,7 +998,7 @@ drop if year!=2018
 drop year age_10
 collapse (sum) pop_wpp, by(age5 sex)
 label data "UN WPP Population data 2018: 5-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2018-5" , replace
+save "`datapath'\version02\2-working\pop_wpp_2018-5" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
 
@@ -1007,6 +1007,6 @@ drop if year!=2018
 drop year age5
 collapse (sum) pop_wpp, by(age_10 sex)
 label data "UN WPP Population data 2018: 10-year age bands"
-save "`datapath'\version20\2-working\pop_wpp_2018-10" , replace
+save "`datapath'\version02\2-working\pop_wpp_2018-10" , replace
 note: TS This dataset prepared using 2000-2018 census & estimate populations generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
 restore
